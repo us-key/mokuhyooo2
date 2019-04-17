@@ -1,0 +1,8 @@
+.env
+venv
+db.sqlite3
+__pycache__
+media
+staticfiles
+local_settings.py
+*.py[co]
