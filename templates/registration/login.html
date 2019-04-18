@@ -1,0 +1,25 @@
+{% extends "_base.html" %}
+{% load bootstrap4 %}
+{% block content %}
+
+{% if forms.errors %}
+<p>Username or password is wrong.</p>
+{% endif %}
+{% if next %}
+    {% if user.is_authenticated %}
+    <p>Your account doesn't have access to this page.</p>
+    {% else %}
+    <p>Please login to see this page.</p>
+    {% endif %}
+{% endif %}
+
+<form method="post" action="{% url 'login' %}">
+{% csrf_token %}
+{% bootstrap_form form layout='horizontal' %}
+<input class="btn" type="submit" value="login"/>
+<input type="hidden" name="next" value="{{ next }}"/>
+</form>
+
+<a href="{% url 'accounts:signup' %}">create user</a>
+
+{% endblock content %}

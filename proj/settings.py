@@ -38,7 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'bootstrap4',
     'debug_toolbar',
+    'accounts',
     'objectives',
 ]
 
@@ -127,3 +129,5 @@ STATIC_URL = '/static/'
 INTERNAL_IPS = ('10.0.2.2')
 
 AUTH_USER_MODEL = 'objectives.User'
+
+LOGIN_REDIRECT_URL = '/objectives/'

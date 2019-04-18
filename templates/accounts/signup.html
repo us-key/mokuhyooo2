@@ -1,0 +1,11 @@
+{% extends '_base.html' %}
+ 
+{% block content %}
+<h1>Sign up</h1>
+<section class="common-form">
+    <form method="post">
+        {% include 'includes/form.html' %}
+        <button type="submit" class="submit btn btn-success">Sign up</button>
+    </form>
+</section>
+{% endblock %}
