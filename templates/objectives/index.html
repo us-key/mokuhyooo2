@@ -1,4 +1,23 @@
 {% extends "_base.html" %}
 {% block content %}
-
+<div class="row">
+    <div class="col-6">
+        <p>今週の目標</p>
+            <textarea class='form-control' rows='6'></textarea>
+    </div>
+    <div class="col-6">
+        <p>今日の目標</p>
+        {% for fo in freeObjective %}
+            <textarea class='form-control' rows='2'>{{ fo.free_word }}</textarea>
+        {% empty %}
+            <textarea class='form-control' rows='2'></textarea>
+        {% endfor %}
+        <p>今日の振返り</p>
+        {% for fr in freeReview %}
+            <textarea class='form-control' rows='2'>{{ fr.free_word }}</textarea>
+        {% empty %}
+            <textarea class='form-control' rows='2'></textarea>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}
