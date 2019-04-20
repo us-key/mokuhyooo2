@@ -1,9 +1,22 @@
 {% extends "_base.html" %}
 {% block content %}
 <div class="row">
+    <div class="col-4"></div>
+    <div class="col-4 text-center">yyyy/mm/dd</div>
+    <div class="col-2">
+        <p><i class="fas fa-check-square"></i><a href="#">年目標</a></p>
+        <p><i class="fas fa-check-square"></i><a href="#">月目標</a></p>
+    </div>
+    <div class="col-2">
+        <p><i class="far fa-square"></i><a href="#">年振返り</a></p>
+        <p><i class="far fa-square"></i><a href="#">月振返り</a></p>
+        <p><i class="far fa-square"></i><a href="#">週振返り</a></p>
+    </div>
+</div>
+<div class="row">
     <div class="col-6">
         <p>今週の目標</p>
-            <textarea class='form-control' rows='6'></textarea>
+        <textarea class='form-control' rows='6'></textarea>
     </div>
     <div class="col-6">
         <p>今日の目標</p>
@@ -19,5 +32,31 @@
             <textarea class='form-control' rows='2'></textarea>
         {% endfor %}
     </div>
+</div>
+<div class="row">
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>数値目標</th>
+      <th></th>
+      <th>今日の実績 <a href="#"><i class="fas fa-upload"></i></a></th>
+      <th>進捗状況</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">目標1</th>
+      <td>週 XXX</td>
+      <td><input  class='form-control' value="xxx"/></td>
+      <td>xxx / xx%</td>
+    </tr>
+    <tr>
+      <th scope="row">目標2</th>
+      <td>平均 XXX</td>
+      <td><input  class='form-control' value="xxx"/></td>
+      <td>xxx / xx%</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 {% endblock %}
