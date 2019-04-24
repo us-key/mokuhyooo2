@@ -1,1 +1,1 @@
-web: gunicorn mokuhyooo2.wsgi --log-file -
+web: gunicorn proj.wsgi --log-file -
