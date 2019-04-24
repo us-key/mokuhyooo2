@@ -77,20 +77,24 @@ def ajax_freeword_register(request):
     free_word = request.POST['free_word']
     id = request.POST['id']
     year, date_index, week_tuple = get_date(request.POST['input_date'])
-    print(free_word)
-    print(id)
+    input_unit = request.POST['input_unit']
+    input_kind = request.POST['input_kind']
+
+    msg_str_unit = {'Y':'年','M':'月','W':'週','D':'日'}
+    msg_str_kind = {'O':'目標','R':'振返り'}
+    msg=msg_str_unit[input_unit]+'の'+msg_str_kind[input_kind]+'を'
     if (id):
         print("update")
         freeInput = FreeInput.objects.get(id=id)
         freeInput.free_word = free_word
         freeInput.save()
+        msg+="更新しました。"
     else:
         print("create")
-        input_unit = request.POST['input_unit']
         day_index = date_index if input_unit=='D' else week_tuple[1]
         freeInput = FreeInput(
             input_unit = input_unit,
-            input_kind = request.POST['input_kind'],
+            input_kind = input_kind,
             year = year,
             day_index = day_index,
             free_word = free_word,
@@ -98,8 +102,8 @@ def ajax_freeword_register(request):
             user_id = request.user,
         )
         freeInput.save()
+        msg+="登録しました。"
     # TODO エラーハンドリング
-    msg = "登録完了"
     return HttpResponse(msg)
 
 def get_date(target_date_str):
