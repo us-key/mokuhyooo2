@@ -6,3 +6,4 @@ media
 staticfiles
 local_settings.py
 *.py[co]
+.vscode

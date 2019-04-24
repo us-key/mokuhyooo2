@@ -1,8 +1,53 @@
 {% extends "_base.html" %}
 {% block content %}
+<script type="text/javascript">
+    $(function () {
+        $('#datetimepicker').datetimepicker({
+            locale: 'ja',
+            dayViewHeaderFormat: 'YYYY年 M月',
+            format: 'YYYY-MM-DD'
+        });
+        $('#datetimepicker').val('{{display_date}}');
+        $('#datetimepicker').on("change", function(e){
+        });
+        $(".fw_post").on("click", function(e){
+            e.preventDefault();
+            var free_word = $(this).parents(".objective-review-group").children(".objective-review-input").val();
+            var date = $('#datetimepicker').val();
+            var input_unit = $(this).attr("id").split("_")[0];
+            var input_kind = $(this).attr("id").split("_")[1];
+            var id = $(this).attr("id").split("_")[3];
+            var url = $(this).prop("href");
+            var token = '{{csrf_token}}';
+            $.ajax({
+                url: url,
+                method: "POST",
+                headers: { "X-CSRFToken": token },
+                data: {
+                    "id": id,
+                    "input_unit": input_unit,
+                    "input_kind": input_kind,
+                    "free_word": free_word,
+                    "input_date": date 
+                },
+                timeout: 10000,
+                datatype: "text",
+            })
+            .done(function(data){
+                alert("done");
+                // TODO 登録完了メッセージをヘッダに出す
+            })
+        });
+
+    });
+</script>
 <div class="row">
     <div class="col-4"></div>
-    <div class="col-4 text-center">yyyy/mm/dd</div>
+    <div class="col-4 text-center">
+        <input type="text" class="form-control datetimepicker-input"
+               id="datetimepicker" data-toggle="datetimepicker"
+               data-target="#datetimepicker"/>
+    </div>
     <div class="col-2">
         <p><i class="fas fa-check-square"></i><a href="#">年目標</a></p>
         <p><i class="fas fa-check-square"></i><a href="#">月目標</a></p>
@@ -15,22 +60,34 @@
 </div>
 <div class="row">
     <div class="col-6">
-        <p>今週の目標</p>
-        <textarea class='form-control' rows='6'></textarea>
+        <div class="form-group objective-review-group">
+            <label for="week_objective">今週の目標 
+                <a id="W_O_link_{{ weekFreeObjective.id|default_if_none:'' }}" href="/objectives/ajax/freeword/register/" class="fw_post">
+                    <i class="fas fa-upload"></i>
+                </a>
+            </label>
+            <textarea class='form-control objective-review-input' rows='6'>{{ weekFreeObjective.free_word|default_if_none:"" }}</textarea>
+        </div>
+        <p>
+        </p>
     </div>
     <div class="col-6">
-        <p>今日の目標</p>
-        {% for fo in freeObjective %}
-            <textarea class='form-control' rows='2'>{{ fo.free_word }}</textarea>
-        {% empty %}
-            <textarea class='form-control' rows='2'></textarea>
-        {% endfor %}
-        <p>今日の振返り</p>
-        {% for fr in freeReview %}
-            <textarea class='form-control' rows='2'>{{ fr.free_word }}</textarea>
-        {% empty %}
-            <textarea class='form-control' rows='2'></textarea>
-        {% endfor %}
+        <div class="form-group objective-review-group">
+            <label for="week_objective">今日の目標 
+                <a id="D_O_link_{{ dateFreeObjective.id|default_if_none:'' }}" href="/objectives/ajax/freeword/register/" class="fw_post">
+                    <i class="fas fa-upload"></i>
+                </a>
+            </label>
+            <textarea class='form-control objective-review-input' rows='2'>{{ dateFreeObjective.free_word|default_if_none:"" }}</textarea>
+        </div>
+        <div class="form-group objective-review-group">
+            <label for="week_objective">今日の振返り 
+                <a id="D_R_link_{{ dateFreeReview.id|default_if_none:'' }}" href="/objectives/ajax/freeword/register/" class="fw_post">
+                    <i class="fas fa-upload"></i>
+                </a>
+            </label>
+            <textarea class='form-control objective-review-input' rows='2'>{{ dateFreeReview.free_word|default_if_none:"" }}</textarea>
+        </div>    
     </div>
 </div>
 <div class="row">
