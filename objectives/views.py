@@ -24,12 +24,12 @@ def display_index(request):
 @login_required
 def display_date_data(request):
     # 指定された日付でデータ取得
-    display_date = request.GET.get('display_date')
+    display_date = request.GET.get('target_date')
     dateFreeObjective, dateFreeReview, weekFreeObjective = get_date_data(request, display_date)
     return render(request, 'objectives/index.html', {
         'display_date': display_date,
-        'freeObjective': dateFreeObjective,
-        'freeReview': dateFreeReview,
+        'dateFreeObjective': dateFreeObjective,
+        'dateFreeReview': dateFreeReview,
         'weekFreeObjective': weekFreeObjective,
         })
 

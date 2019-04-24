@@ -24,7 +24,7 @@ BASE_DIR = dirname(dirname(abspath(__file__)))
 SECRET_KEY = '^v#p5rjjg)-@m_j)0h97_5brf4hama%l$79m6vih4+@31e0lpz'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 LOGGING = {
     'disable_existing_loggers': False,
@@ -160,3 +160,12 @@ INTERNAL_IPS = ('10.0.2.2')
 AUTH_USER_MODEL = 'objectives.User'
 
 LOGIN_REDIRECT_URL = '/objectives/'
+
+try:
+    from .local_settings import *
+except ImportError:
+    pass
+
+if not DEBUG:
+    import django_heroku
+    django_heroku.settings(locals())

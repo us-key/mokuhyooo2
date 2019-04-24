@@ -8,7 +8,12 @@
             format: 'YYYY-MM-DD'
         });
         $('#datetimepicker').val('{{display_date}}');
-        $('#datetimepicker').on("change", function(e){
+        $('#datetimepicker').on("change.datetimepicker", function(e){
+            e.preventDefault();
+            if (e.oldDate) {
+                var target_date = $(this).val();
+                window.location.href = "/objectives/display_date?target_date=" + target_date;    
+            }
         });
         $(".fw_post").on("click", function(e){
             e.preventDefault();

@@ -1,0 +1,1 @@
+web: gunicorn mokuhyooo2.wsgi --log-file -
