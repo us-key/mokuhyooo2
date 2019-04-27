@@ -2,6 +2,11 @@
 {% block content %}
 <script type="text/javascript">
     $(function () {
+        moment.locale('ja', {
+            week: {
+                dow: 1
+            }
+        });
         $('#datetimepicker').datetimepicker({
             locale: 'ja',
             dayViewHeaderFormat: 'YYYY年 M月',

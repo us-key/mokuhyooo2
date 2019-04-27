@@ -45,27 +45,29 @@ def get_date_data(request, display_date):
     review = ""
     numberObjectives = []
     # クエリに必要な変数の設定
-    year, date_index, week_tuple = get_date(display_date)
+    year, month, date_index, week_tuple = get_date(display_date)
+    # 日番号：年・月・週・日
+    day_index_dic = {'Y':year,'M':month,'W':week_tuple[1],'D':date_index}
     # 自由入力の取得
     dateFreeObjective = FreeInput.objects.filter(
         input_unit='D',
         input_kind='O',
         year=year,
-        day_index=date_index,
+        day_index=day_index_dic['D'],
         user_id=request.user,
     ).first()
     dateFreeReview = FreeInput.objects.filter(
         input_unit='D',
         input_kind='R',
         year=year,
-        day_index=date_index,
+        day_index=day_index_dic['D'],
         user_id=request.user,
     ).first()
     weekFreeObjective = FreeInput.objects.filter(
         input_unit='W',
         input_kind='O',
         year=week_tuple[0], #isocalendarは木曜が含まれる週単位のため、実際の年と異なる可能性があるため
-        day_index=week_tuple[1],
+        day_index=day_index_dic['W'],
         user_id=request.user,
     ).first()
     return dateFreeObjective, dateFreeReview, weekFreeObjective
@@ -78,9 +80,13 @@ def ajax_freeword_register(request):
     print("*****[#ajax_freeword_register]start*****")
     free_word = request.POST['free_word']
     id = request.POST['id']
-    year, date_index, week_tuple = get_date(request.POST['input_date'])
+    year, month, date_index, week_tuple = get_date(request.POST['input_date'])
+    # 日番号：年・月・週・日
+    day_index_dic = {'Y':year,'M':month,'W':week_tuple[1],'D':date_index}
     input_unit = request.POST['input_unit']
     input_kind = request.POST['input_kind']
+    # 年：isocalendarは第１木曜の含まれる週を第１週とする週単位となるため、年が実際の年と異なる場合アリ
+    register_year = week_tuple[0] if input_unit=='W' else year
 
     msg_str_unit = {'Y':'年','M':'月','W':'週','D':'日'}
     msg_str_kind = {'O':'目標','R':'振返り'}
@@ -93,12 +99,11 @@ def ajax_freeword_register(request):
         msg+="更新しました。"
     else:
         print("create")
-        day_index = date_index if input_unit=='D' else week_tuple[1]
         freeInput = FreeInput(
             input_unit = input_unit,
             input_kind = input_kind,
-            year = year,
-            day_index = day_index,
+            year = register_year,
+            day_index = day_index_dic[input_unit],
             free_word = free_word,
             input_status = 1,
             user_id = request.user,
@@ -115,14 +120,18 @@ def ajax_freeword_get(request):
     print("*****[#ajax_freeword_get]start*****")
     input_unit = request.GET['input_unit']
     input_kind = request.GET['input_kind']
-    year, date_index, week_tuple = get_date(request.GET['input_date'])
+    year, month, date_index, week_tuple = get_date(request.GET['input_date'])
+    # 日番号：年・月・週・日
+    day_index_dic = {'Y':year,'M':month,'W':week_tuple[1],'D':date_index}
+    # 年：isocalendarは第１木曜の含まれる週を第１週とする週単位となるため、年が実際の年と異なる場合アリ
+    register_year = week_tuple[0] if input_unit=='W' else year
     user_id = request.GET['user']
     user = User.objects.get(id=user_id)
     freeInput = FreeInput.objects.filter(
         input_unit=input_unit,
         input_kind=input_kind,
-        year=year,
-        day_index=year,
+        year=register_year,
+        day_index=day_index_dic[input_unit],
         user_id=user,
     )
     json = serializers.serialize('json', freeInput, ensure_ascii=False)
@@ -134,7 +143,8 @@ def get_date(target_date_str):
     '''対象日付の年、日付番号、isocalendarのtupleを返却する
     '''
     year = target_date_str.split("-")[0]
+    month = target_date_str.split("-")[1]
     target_date = datetime.strptime(target_date_str, '%Y-%m-%d')
     date_index = (target_date - datetime.strptime('{year}-01-01'.format(year=year), '%Y-%m-%d')).days + 1
     week_tuple = target_date.isocalendar() #isocalendar:年,週番号,曜日番号
-    return year, date_index, week_tuple
+    return year, month, date_index, week_tuple
