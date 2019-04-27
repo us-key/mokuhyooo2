@@ -1,10 +1,12 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.core import serializers
 from django.http import HttpResponse
+from django.http.response import JsonResponse
 
 from datetime import datetime,date,timedelta
 
-from .models import FreeInput
+from .models import FreeInput,User
 
 # Create your views here.
 
@@ -105,6 +107,28 @@ def ajax_freeword_register(request):
         msg+="登録しました。"
     # TODO エラーハンドリング
     return HttpResponse(msg)
+
+@login_required
+def ajax_freeword_get(request):
+    '''ajaxで送信されたパラメータを元にFreeInputを取得しJsonで返却する。
+    '''
+    print("*****[#ajax_freeword_get]start*****")
+    input_unit = request.GET['input_unit']
+    input_kind = request.GET['input_kind']
+    year, date_index, week_tuple = get_date(request.GET['input_date'])
+    user_id = request.GET['user']
+    user = User.objects.get(id=user_id)
+    freeInput = FreeInput.objects.filter(
+        input_unit=input_unit,
+        input_kind=input_kind,
+        year=year,
+        day_index=year,
+        user_id=user,
+    )
+    json = serializers.serialize('json', freeInput, ensure_ascii=False)
+    return HttpResponse(json, content_type='application/json; charset=UTF-8')
+
+
 
 def get_date(target_date_str):
     '''対象日付の年、日付番号、isocalendarのtupleを返却する

@@ -9,4 +9,5 @@ urlpatterns = [
 
     # ajax
     path('ajax/freeword/register/', views.ajax_freeword_register),
+    path('ajax/freeword/get/', views.ajax_freeword_get),
 ]
