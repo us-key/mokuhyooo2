@@ -86,13 +86,12 @@
     });
 </script>
 <div class="row">
-    <div class="col-4"></div>
-    <div class="col-4 text-center">
+    <div class="col-md-8 col-12">
         <input type="text" class="form-control datetimepicker-input"
                id="datetimepicker" data-toggle="datetimepicker"
                data-target="#datetimepicker"/>
     </div>
-    <div class="col-2">
+    <div class="col-md-2 col-6">
         <p>
             <i class="fas fa-check-square"></i>
             <a class="modalOpener" id="Y_O" href="#" data-toggle="modal" data-target="#freecommentmodal">年目標</a>
@@ -102,7 +101,7 @@
             <a class="modalOpener" id="M_O" href="#" data-toggle="modal" data-target="#freecommentmodal">月目標</a>
         </p>
     </div>
-    <div class="col-2">
+    <div class="col-md-2 col-6">
         <p>
             <i class="far fa-square"></i>
             <a class="modalOpener" id="Y_R" href="#" data-toggle="modal" data-target="#freecommentmodal">年振返り</a>
@@ -132,7 +131,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-6">
+    <div class="col-md-6 col-12">
         <div class="form-group objective-review-group">
             <label>今日の目標 
                 <a id="D_O_link_{{ dateFreeObjective.id|default_if_none:'' }}" href="/objectives/ajax/freeword/register/" class="fw_post">
@@ -150,7 +149,7 @@
             <textarea class='form-control objective-review-input' rows='2'>{{ dateFreeReview.free_word|default_if_none:"" }}</textarea>
         </div>    
     </div>
-    <div class="col-6">
+    <div class="col-md-6 col-12">
         <table class="table table-hover">
           <thead>
             <tr>
