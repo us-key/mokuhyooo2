@@ -3,6 +3,19 @@ from django.db import models
 
 # Create your models here.
 
+# 数値種別
+NUMBER_KIND_CHOICES = [
+    ('N', '数値'),
+    ('P', '時間'),
+    ('T', '時刻'),
+]
+
+# 集計種別
+SUMMARY_KIND = [
+    ('S', '合計'),
+    ('A', '平均'),
+]
+
 class User(AbstractUser):
     '''カスタムユーザー
     '''
@@ -34,7 +47,7 @@ class FreeInput(models.Model):
         blank=True,
         null=True,
     )
-    user_id = models.ForeignKey(
+    user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
     )
@@ -52,14 +65,16 @@ class NumberObjectiveMaster(models.Model):
     )
     number_kind = models.CharField(
         max_length=1,
+        choices=NUMBER_KIND_CHOICES
     )
     summary_kind = models.CharField(
         max_length=1,
+        choices=SUMMARY_KIND
     )
     valid_flag = models.CharField(
         max_length=1,
     )
-    user_id = models.ForeignKey(
+    user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
     )
@@ -83,6 +98,7 @@ class NumberObjectiveOutput(models.Model):
     '''数値目標実績：日毎の数値目標実績を登録
     ・数値目標マスタID
     ・年
+    ・週番号
     ・日付番号：日付の番号
     ・実績値：時間の場合は分単位で記録、時刻の場合は00:00基準で分を記録
     '''
@@ -91,5 +107,6 @@ class NumberObjectiveOutput(models.Model):
         on_delete=models.CASCADE,
     )
     year = models.PositiveSmallIntegerField()
+    week_index = models.PositiveSmallIntegerField()
     date_index = models.PositiveSmallIntegerField()
     output_value = models.PositiveSmallIntegerField()

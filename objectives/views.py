@@ -1,14 +1,26 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core import serializers
 from django.http import HttpResponse
 from django.http.response import JsonResponse
+from django.views.generic.edit import CreateView
 
 from datetime import datetime,date,timedelta
 
+from .forms import NumberObjectiveMasterForm
 from .models import FreeInput,User
 
 # Create your views here.
+
+class NumberObjectiveMasterCreateView(LoginRequiredMixin, CreateView):
+    template_name = "numberobjectivemaster/create.html"
+    form_class = NumberObjectiveMasterForm
+    success_url = '/objectives/master/create'
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
 
 @login_required
 def display_index(request):
@@ -42,7 +54,6 @@ def get_date_data(request, display_date):
     '''
     # 返却する値の初期化
     numberObjectives = []
-    
     # 自由入力の取得
     dateFreeObjective = get_free_input('D', 'O', display_date, request.user).first()
     dateFreeReview = get_free_input('D', 'R', display_date, request.user).first()
@@ -83,7 +94,7 @@ def ajax_freeword_register(request):
             day_index = day_index_dic[input_unit],
             free_word = free_word,
             input_status = 1,
-            user_id = request.user,
+            user = request.user,
         )
         freeInput.save()
         msg+="登録しました。"
@@ -115,7 +126,7 @@ def get_free_input(input_unit, input_kind, target_date_str, user):
         input_kind=input_kind,
         year=register_year,
         day_index=day_index_dic[input_unit],
-        user_id=user,
+        user=user,
     )
 
 def get_date(target_date_str):
