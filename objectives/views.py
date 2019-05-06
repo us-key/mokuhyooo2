@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core import serializers
 from django.http import HttpResponse
 from django.http.response import JsonResponse
+from django.urls import reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView
 
@@ -26,7 +27,7 @@ class NumberObjectiveMasterCreateView(LoginRequiredMixin, CreateView):
     '''数値目標マスタ作成画面'''
     template_name = "numberobjectivemaster/create.html"
     form_class = NumberObjectiveMasterForm
-    success_url = '/objectives/master/create'
+    success_url = reverse_lazy('objectives:master_list')
 
     def form_valid(self, form):
         form.instance.user = self.request.user
