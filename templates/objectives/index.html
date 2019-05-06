@@ -116,6 +116,7 @@
         </p>
     </div>
 </div>
+{% if weekFreeObjective %}
 <div class="row">
     <div class="col-12">
         <div class="form-group objective-review-group">
@@ -176,6 +177,9 @@
         </table>
     </div>
 </div>
+{% else %}
+<p>週の目標が設定されていません！</p><a href="{% url 'objectives:week_objective_create' display_date %}">設定する</a>
+{% endif %}
 <!-- modal -->
 <div class="modal fade" id="freecommentmodal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg">

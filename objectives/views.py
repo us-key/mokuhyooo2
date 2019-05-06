@@ -125,6 +125,17 @@ def ajax_freeword_get(request):
     json = serializers.serialize('json', freeInput, ensure_ascii=False)
     return HttpResponse(json, content_type='application/json; charset=UTF-8')
 
+@login_required
+def display_week_objective_form(request, datestr):
+    '''週の目標設定画面表示'''
+    start_date, end_date = get_week_start_and_end(datestr)
+    start_date_str = start_date.strftime("%Y-%m-%d")
+    end_date_str = end_date.strftime("%Y-%m-%d")
+
+    return render(request, 'objectives/week_objective_form.html', {
+        'target_period': start_date_str + " ～ " + end_date_str,
+    })
+
 def get_free_input(input_unit, input_kind, target_date_str, user):
     '''FreeInput取得のクエリを実行し結果を返却する'''
     year, month, date_index, week_tuple = get_date(target_date_str)
@@ -149,3 +160,12 @@ def get_date(target_date_str):
     date_index = (target_date - datetime.strptime('{year}-01-01'.format(year=year), '%Y-%m-%d')).days + 1
     week_tuple = target_date.isocalendar() #isocalendar:年,週番号,曜日番号
     return year, month, date_index, week_tuple
+
+def get_week_start_and_end(target_date_str):
+    '''対象日付を含む週の開始日・終了日(datetime)を返却する'''
+    target_date = datetime.strptime(target_date_str, '%Y-%m-%d')
+    week_tuple = target_date.isocalendar() #isocalendar:年,週番号,曜日番号
+    # isocalendarは月曜=1、日曜=7
+    start_date = target_date + timedelta(days=(1-week_tuple[2]))
+    end_date = target_date + timedelta(days=7-week_tuple[2])
+    return start_date, end_date
