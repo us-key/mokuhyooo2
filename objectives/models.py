@@ -62,14 +62,17 @@ class NumberObjectiveMaster(models.Model):
     '''
     name = models.CharField(
         max_length=100,
+        verbose_name='名称'
     )
     number_kind = models.CharField(
         max_length=1,
-        choices=NUMBER_KIND_CHOICES
+        choices=NUMBER_KIND_CHOICES,
+        verbose_name='数値種別',
     )
     summary_kind = models.CharField(
         max_length=1,
-        choices=SUMMARY_KIND
+        choices=SUMMARY_KIND,
+        verbose_name='集計種別',
     )
     valid_flag = models.CharField(
         max_length=1,

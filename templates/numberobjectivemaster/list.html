@@ -1,6 +1,7 @@
 {% extends "_base.html" %}
 {% load get_dic_vals %}
 {% block content %}
+<a class="btn btn-dark" href="{% url 'objectives:master_create' %}">マスタ追加</a>
 <table class="table table-hover">
     <thead>
         <tr>
@@ -18,7 +19,11 @@
             <td>{{ item.summary_kind|summary_kind }}</td>
         </tr>
         {% empty %}
-        マスタがありません。
+        <tr>
+            <td colspan="3">
+                マスタがありません。
+            </td>
+        </tr>
         {% endfor %}
     </tbody>
 </table>
