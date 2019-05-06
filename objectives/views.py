@@ -4,16 +4,26 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core import serializers
 from django.http import HttpResponse
 from django.http.response import JsonResponse
+from django.views.generic import ListView
 from django.views.generic.edit import CreateView
 
 from datetime import datetime,date,timedelta
 
 from .forms import NumberObjectiveMasterForm
-from .models import FreeInput,User
+from .models import FreeInput,User,NumberObjectiveMaster
 
 # Create your views here.
 
+class NumberObjectiveMasterListView(LoginRequiredMixin, ListView):
+    '''数値目標一覧画面'''
+    template_name = "numberobjectivemaster/list.html"
+    model = NumberObjectiveMaster
+
+    def get_queryset(self):
+        return NumberObjectiveMaster.objects.filter(user=self.request.user)
+
 class NumberObjectiveMasterCreateView(LoginRequiredMixin, CreateView):
+    '''数値目標マスタ作成画面'''
     template_name = "numberobjectivemaster/create.html"
     form_class = NumberObjectiveMasterForm
     success_url = '/objectives/master/create'

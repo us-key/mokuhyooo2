@@ -1,0 +1,15 @@
+from django import template
+
+register = template.Library()
+
+@register.filter
+def number_kind_choices(key):
+    '''数値種別'''
+    dic = {'N':'数値', 'P':'時間', 'T':'時刻',}
+    return dic[key]
+
+@register.filter
+def summary_kind(key):
+    '''集計種別'''
+    dic = {'S':'合計', 'A':'平均',}
+    return dic[key]

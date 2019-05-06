@@ -1,0 +1,26 @@
+{% extends "_base.html" %}
+{% load get_dic_vals %}
+{% block content %}
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>名称</th>
+            <th>数値種別</th>
+            <th>集計種別</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in object_list %}
+        <tr>
+            <td>{{ item.name }}</td>
+            <!-- TODO カスタムフィルタで辞書オブジェクトから値変換して区分値を表示させる -->
+            <td>{{ item.number_kind|number_kind_choices }}</td>
+            <td>{{ item.summary_kind|summary_kind }}</td>
+        </tr>
+        {% empty %}
+        マスタがありません。
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
