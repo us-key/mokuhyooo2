@@ -11,6 +11,6 @@ urlpatterns = [
     path('week_objective/create/<str:datestr>', views.display_week_objective_form, name='week_objective_create'),
 
     # ajax
-    path('ajax/freeword/register', views.ajax_freeword_register),
-    path('ajax/freeword/get', views.ajax_freeword_get),
+    path('ajax/freeword/register', views.ajax_freeword_register, name='ajax_freeword_register'),
+    path('ajax/freeword/get', views.ajax_freeword_get, name='ajax_freeword_get'),
 ]
