@@ -131,9 +131,12 @@ def display_week_objective_form(request, datestr):
     start_date, end_date = get_week_start_and_end(datestr)
     start_date_str = start_date.strftime("%Y-%m-%d")
     end_date_str = end_date.strftime("%Y-%m-%d")
+    numberObjectiveMaster = NumberObjectiveMaster.objects.filter(user=request.user)
 
     return render(request, 'objectives/week_objective_form.html', {
-        'target_period': start_date_str + " ～ " + end_date_str,
+        'start_date_str': start_date_str,
+        'end_date_str': end_date_str,
+        'masters': numberObjectiveMaster,
     })
 
 def get_free_input(input_unit, input_kind, target_date_str, user):
