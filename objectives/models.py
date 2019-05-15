@@ -57,7 +57,7 @@ class NumberObjectiveMaster(models.Model):
     ・名称
     ・数値種別：数値(N:Number)、時間(P:Period)、時刻(T:Time)
     ・集計種別：合計(S)、平均(A)
-    ・有効フラグ：最新で有効なもの：1、無効なもの：0
+    ・有効フラグ：有効なもの：1、無効なもの：0(無効なものは週目標作成時には対象外になるが過去の実績は生かす)
     ・ユーザーID
     '''
     name = models.CharField(

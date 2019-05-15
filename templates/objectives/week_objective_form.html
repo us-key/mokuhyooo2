@@ -10,7 +10,7 @@
                 $(this).val($(this).val().replace(/[^0-9:]/g,""));
             })
         // 時刻・期間入力項目のフォーカスアウト時制御
-        $('.input_pe, .input_ti').on('focusout', function(e){
+        $(".input_pe, .input_ti").on("focusout", function(e){
             e.preventDefault();
             var str = $(this).val();
             var tmpInt = null;
@@ -37,13 +37,64 @@
                 if (errMsg == "") {
                     if (strArr[0] == "") strArr[0] = "0";
                     str = strArr[0] + ":" + ('00' + strArr[1]).slice(-2);
-                    $('.msg-area').text("");
+                    $(".msg-area").text("");
                     outStr = str
                 } else {
-                    $('.msg-area').text(errMsg);
+                    $(".msg-area").text(errMsg);
                 }
             }
             $(this).val(outStr);
+        })
+        // 入力値を投げる
+        $("#wk_obj_submit").on("click", function(e){
+            e.preventDefault();
+            var path = location.pathname;
+            var target_date = path.split("/")[4];
+            var free_word = $(".objective-review-input").val();
+            var objectives = [];
+            var rows = $(".wk_obj_row");
+            rows.each(function(idx, row){
+                var obj = {};
+                // id
+                var id = $(row).attr("id").split("_")[1];
+                // 目標値
+                var dom = $(row).find(".input_obj");
+                var val = $(dom).val();
+                var number_kind = $(dom).attr("id").split("_")[1];
+                // 入力がある場合のみ登録
+                if (val) {
+                    if (number_kind != "N"){
+                        // 時間の変換
+                        val = parseInt(val.split(":")[0]) * 60 + parseInt(val.split(":")[1]) 
+                    }
+                    obj = {
+                        "master_id": id,
+                        "value": val
+                    }
+                    objectives.push(obj); 
+                }
+            });
+            if (objectives.length == 0){
+                $(".msg-area").text("数値目標の入力がありません。");
+            } else {
+                var token = '{{csrf_token}}';
+                $.ajax({
+                    url: "{% url 'objectives:ajax_weekobj_create' %}",
+                    method: "POST",
+                    headers: { "X-CSRFToken": token },
+                    dataType: "json",
+                    data: JSON.stringify({
+                        "target_date": target_date,
+                        "free_word": free_word,
+                        "objectives": objectives
+                    }),
+                    timeout: 10000,
+                })
+                .done(function(target_date){
+                    console.log("週目標登録完了：" + target_data)
+                    window.location.href = "{% url 'objectives:index' %}";
+                })
+            }
         })
     })
 </script>
@@ -58,28 +109,48 @@
     <!-- 数値目標 -->
     <div class="col-4">数値目標</div>
     <div class="col-8 msg-area"></div>
-    <div class="col-4"></div>
-    <div class="col-4">目標値</div>
-    <div class="col-4">前週実績</div>
-    {% for master in masters %}
-        <!-- 名称 -->
-        <div class="col-3"><input type="checkbox"/>{{ master.name }}</div>
-        <!-- 集計単位 -->
-        <div class="col-1" style="text-align: right">
-        {% if master.summary_kind == 'S' %}
-            週
-        {% elif master.summary_kind == 'A' %}
-            平均
-        {% endif %}
-        </div>
-        <!-- number_kind毎に形式分け -->
-        {% if master.number_kind == 'N' %}
-            {% include "objectives/_week_objective_number.html" %}
-        {% elif master.number_kind == 'P' %}
-            {% include "objectives/_week_objective_period.html" %}
-        {% elif master.number_kind == 'T' %}
-            {% include "objectives/_week_objective_time.html" %}     
-        {% endif %}        
-    {% endfor %}
+</div>
+<div class="row">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th></th>
+                <th></th>
+                <th>目標値</th>
+                <th>前週実績</th> 
+            </tr>
+        </thead>
+        <tbody>
+        <!-- 数値目標マスタ件数分行を作る -->
+        {% for master in masters %}
+            <!-- 名称 -->
+            <tr class="wk_obj_row" id="row_{{ master.id }}">
+                <td>
+                    {{ master.name }}
+                </td>
+                <!-- 集計単位 -->
+                <td style="text-align: right">
+                {% if master.summary_kind == 'S' %}
+                    週
+                {% elif master.summary_kind == 'A' %}
+                    平均
+                {% endif %}
+                </td>
+                <!-- number_kind毎に形式分け -->
+                {% if master.number_kind == 'N' %}
+                    {% include "objectives/_week_objective_number.html" %}
+                {% elif master.number_kind == 'P' %}
+                    {% include "objectives/_week_objective_period.html" %}
+                {% elif master.number_kind == 'T' %}
+                    {% include "objectives/_week_objective_time.html" %}     
+                {% endif %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="row">
+    <input id="wk_obj_submit" type="submit" class="btn btn-primary" value="登録"/>
 </div>
 {% endblock %}

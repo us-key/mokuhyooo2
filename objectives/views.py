@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -11,7 +12,7 @@ from django.views.generic.edit import CreateView
 from datetime import datetime,date,timedelta
 
 from .forms import NumberObjectiveMasterForm
-from .models import FreeInput,User,NumberObjectiveMaster
+from .models import FreeInput,User,NumberObjectiveMaster, NumberObjective
 
 # Create your views here.
 
@@ -31,6 +32,7 @@ class NumberObjectiveMasterCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user
+        form.instance.valid_flag = "1"
         return super().form_valid(form)
 
 @login_required
@@ -74,7 +76,6 @@ def get_date_data(request, display_date):
 @login_required
 def ajax_freeword_register(request):
     '''ajaxで送信されたパラメータを元にFreeInputを登録する。
-    現状weekとdayのみ対応。month,yearは追って追加
     '''
     print("*****[#ajax_freeword_register]start*****")
     free_word = request.POST['free_word']
@@ -126,12 +127,49 @@ def ajax_freeword_get(request):
     return HttpResponse(json, content_type='application/json; charset=UTF-8')
 
 @login_required
+def ajax_weekobj_create(request):
+    '''ajaxで送信されたデータを元に週目標を登録する'''
+    print("*****[#ajax_weekobj_create]start*****")
+    data = json.loads(request.body)
+    print(data)
+    target_date = data["target_date"]
+    if (target_date != ''):
+        free_word = data["free_word"]
+        year, month, date_index, week_tuple = get_date(target_date)
+        print(free_word)
+        if (free_word != ''):
+            freeInput = FreeInput(
+                input_unit = 'W',
+                input_kind = 'O',
+                year = week_tuple[0],
+                day_index = week_tuple[1],
+                free_word = free_word,
+                input_status = 1,
+                user = request.user,
+            )
+            freeInput.save()
+        objectives = data["objectives"]
+        print(objectives)
+        for obj in objectives:
+            numberObjective = NumberObjective(
+                master_id = NumberObjectiveMaster.objects.get(id=int(obj["master_id"])),
+                year = week_tuple[0],
+                week_index = week_tuple[1],
+                objective_value = int(obj["value"]),
+            )
+            numberObjective.save()
+    return HttpResponse(target_date)
+
+
+@login_required
 def display_week_objective_form(request, datestr):
     '''週の目標設定画面表示'''
     start_date, end_date = get_week_start_and_end(datestr)
     start_date_str = start_date.strftime("%Y-%m-%d")
     end_date_str = end_date.strftime("%Y-%m-%d")
-    numberObjectiveMaster = NumberObjectiveMaster.objects.filter(user=request.user)
+    numberObjectiveMaster = NumberObjectiveMaster.objects.filter(user=request.user, valid_flag="1")
+
+
 
     return render(request, 'objectives/week_objective_form.html', {
         'start_date_str': start_date_str,
