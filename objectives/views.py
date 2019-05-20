@@ -12,7 +12,7 @@ from django.views.generic.edit import CreateView
 from datetime import datetime,date,timedelta
 
 from .forms import NumberObjectiveMasterForm
-from .models import FreeInput,User,NumberObjectiveMaster, NumberObjective
+from .models import *
 
 # Create your views here.
 
@@ -66,7 +66,41 @@ def get_date_data(request, display_date):
     数値目標は指定された日付の週に目標として設定されたものを表示
     '''
     # 返却する値の初期化
-    numberObjectives = []
+    year, month, date_index, week_tuple = get_date(display_date)
+    '''数量目標
+    名称(マスタ)、集計種別(マスタ)、数値種別(マスタ)、
+    目標値(数値目標)、実績集計値(実績：集計)、実績値(実績)
+    ⇒マスタと数値目標(年・週番号指定)を結合し、実績集計と当日の実績を
+    　外部結合する
+    '''
+    numberObjective = NumberObjective.objects.raw(
+        '''
+        select m.id, m.name, m.number_kind, m.summary_kind, oo_sum.sumval, oo.output_value
+        from objectives_numberobjectivemaster m
+        left join objectives_numberobjective o
+        on m.id = o.master_id_id
+        and m.user_id = %s
+        left outer join 
+        (
+            select master_id_id, year, week_index, sum(output_value) sumval
+            from objectives_numberobjectiveoutput
+            group by master_id_id, year, week_index
+        ) oo_sum
+        on o.master_id_id = oo_sum.master_id_id
+        and o.year = oo_sum.year
+        and o.week_index = oo_sum.week_index
+
+        left outer join objectives_numberobjectiveoutput oo
+        on o.master_id_id = oo.master_id_id
+        and o.year = oo.year
+        and o.week_index = oo.week_index
+        and oo.date_index = %s
+
+        where o.year = %s
+        and o.week_index = %s
+        ''' % (request.user.id, date_index, week_tuple[0], week_tuple[1])
+    )
+    print(list(numberObjective))
     # 自由入力の取得
     dateFreeObjective = get_free_input('D', 'O', display_date, request.user).first()
     dateFreeReview = get_free_input('D', 'R', display_date, request.user).first()
