@@ -14,4 +14,5 @@ urlpatterns = [
     path('ajax/freeword/register', views.ajax_freeword_register, name='ajax_freeword_register'),
     path('ajax/freeword/get', views.ajax_freeword_get, name='ajax_freeword_get'),
     path('ajax/weekobj/create', views.ajax_weekobj_create, name="ajax_weekobj_create"),
+    path('ajax/dateOutput/create', views.ajax_dateoutput_create, name="ajax_dateoutput_create"),
 ]

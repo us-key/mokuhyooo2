@@ -1,0 +1,22 @@
+{% load calculator %}
+<!-- 目標値 -->
+<td>{{ numObj.objective_value }}</td>
+<!-- その日の実績値 -->
+<td>
+    <input class="form-control d_num_objective input_ti input_obj" 
+            type="text"
+            id="O_T_{{ numObj.id }}
+            value="{{ numObj.objective_value|num_to_time }}" "/>
+</td>
+<!-- 合計or平均 / パーセンテージ -->
+<!-- 割り算は組み込みフィルター -->
+<td>
+    {% if numObj.summary_kind == 'S' %}
+    {{ numObj.sumval|default_if_none:0 }}
+    {% elif numObj.summary_kind == 'A' %}
+    {{ numObj.sumval | dividie:numObj.cnt }}
+    {% endif %}
+    <!-- 目標値/実績合計or平均値 -->
+    / {{ numObj.objective_value | dividie:numObj.sumval | dividie:numObj.cnt }}
+    
+</td>

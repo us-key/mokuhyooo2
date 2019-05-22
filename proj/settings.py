@@ -70,6 +70,7 @@ TEMPLATES = [
             ],
             'libraries': {
                 'get_dic_vals': 'templatetags.get_dic_vals',
+                'calculator': 'templatetags.calculator',
             },
         },
     },

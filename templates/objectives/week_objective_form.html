@@ -2,49 +2,6 @@
 {% block content %}
 <script type="text/javascript">
     $(function(){
-        // 時刻・期間入力項目の入力制御(数値、コロンのみ)
-        $("[with]").off(".inputcontrol")
-        $("[with='time']")
-            .off(".inputcontrol.time")
-            .on("keyup.inputcontrol.time", function(){
-                $(this).val($(this).val().replace(/[^0-9:]/g,""));
-            })
-        // 時刻・期間入力項目のフォーカスアウト時制御
-        $(".input_pe, .input_ti").on("focusout", function(e){
-            e.preventDefault();
-            var str = $(this).val();
-            var tmpInt = null;
-            var outStr = "";
-            var errMsg = ""; 
-            if (str != "") {
-                // 1. コロン無しの場合、時:分に変換
-                if (str.indexOf(":") == -1) {
-                    tmpInt = parseInt(str, 10);
-                    str = (tmpInt / 60 | 0).toString() + ":" + ('00' + (tmpInt % 60)).slice(-2);
-                }
-                var strArr = str.split(":");
-                // 2. コロン前後のチェック
-                if (strArr[1].length > 2) {
-                    errMsg = "xx:xxの形式で入力してください。"; // フォーマットエラー
-                } else if ($(this).attr("class").indexOf("input_pe") != -1 && parseInt(strArr[0], 10) >= 24) {
-                    // 期間 & 時≧24
-                    errMsg = "期間は0:00~23:59の間で入力してください。"; // 期間オーバーエラー
-                } else if ($(this).attr("class").indexOf("input_ti") != -1 && parseInt(strArr[0], 10) >= 48) {
-                    // 時刻 & 時≧48
-                    errMsg = "時刻は0:00~47:59の間で入力してください。"; // 時刻オーバーエラー
-                }
-                // 3. フォーマット
-                if (errMsg == "") {
-                    if (strArr[0] == "") strArr[0] = "0";
-                    str = strArr[0] + ":" + ('00' + strArr[1]).slice(-2);
-                    $(".msg-area").text("");
-                    outStr = str
-                } else {
-                    $(".msg-area").text(errMsg);
-                }
-            }
-            $(this).val(outStr);
-        })
         // 入力値を投げる
         $("#wk_obj_submit").on("click", function(e){
             e.preventDefault();

@@ -39,25 +39,27 @@ class NumberObjectiveMasterCreateView(LoginRequiredMixin, CreateView):
 def display_index(request):
     today = date.today().strftime("%Y-%m-%d")
     # 今日日付でデータ取得
-    dateFreeObjective, dateFreeReview, weekFreeObjective = get_date_data(request, today)
+    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective = get_date_data(request, today)
 
     return render(request, 'objectives/index.html', {
         'display_date': today,
         'dateFreeObjective': dateFreeObjective,
         'dateFreeReview': dateFreeReview,
         'weekFreeObjective': weekFreeObjective,
+        'numberObjective': numberObjective,
         })
 
 @login_required
 def display_date_data(request):
     # 指定された日付でデータ取得
     display_date = request.GET.get('target_date')
-    dateFreeObjective, dateFreeReview, weekFreeObjective = get_date_data(request, display_date)
+    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective = get_date_data(request, display_date)
     return render(request, 'objectives/index.html', {
         'display_date': display_date,
         'dateFreeObjective': dateFreeObjective,
         'dateFreeReview': dateFreeReview,
         'weekFreeObjective': weekFreeObjective,
+        'numberObjective': numberObjective,
         })
 
 @login_required
@@ -69,20 +71,20 @@ def get_date_data(request, display_date):
     year, month, date_index, week_tuple = get_date(display_date)
     '''数量目標
     名称(マスタ)、集計種別(マスタ)、数値種別(マスタ)、
-    目標値(数値目標)、実績集計値(実績：集計)、実績値(実績)
+    目標値(数値目標)、実績集計値(実績：集計)、実績値(実績)、件数(実績：平均算出用)
     ⇒マスタと数値目標(年・週番号指定)を結合し、実績集計と当日の実績を
     　外部結合する
     '''
     numberObjective = NumberObjective.objects.raw(
         '''
-        select m.id, m.name, m.number_kind, m.summary_kind, oo_sum.sumval, oo.output_value
+        select oo.id, m.id masterid, m.name, m.number_kind, m.summary_kind, o.objective_value, oo_sum.sumval, oo.output_value, oo_sum.cnt
         from objectives_numberobjectivemaster m
         left join objectives_numberobjective o
         on m.id = o.master_id_id
         and m.user_id = %s
         left outer join 
         (
-            select master_id_id, year, week_index, sum(output_value) sumval
+            select master_id_id, year, week_index, sum(output_value) sumval, count(*) cnt
             from objectives_numberobjectiveoutput
             group by master_id_id, year, week_index
         ) oo_sum
@@ -105,7 +107,7 @@ def get_date_data(request, display_date):
     dateFreeObjective = get_free_input('D', 'O', display_date, request.user).first()
     dateFreeReview = get_free_input('D', 'R', display_date, request.user).first()
     weekFreeObjective = get_free_input('W', 'O', display_date, request.user).first()
-    return dateFreeObjective, dateFreeReview, weekFreeObjective
+    return dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective
 
 @login_required
 def ajax_freeword_register(request):
@@ -194,6 +196,37 @@ def ajax_weekobj_create(request):
             numberObjective.save()
     return HttpResponse(target_date)
 
+@login_required
+def ajax_dateoutput_create(request):
+    '''ajaxで送信されたデータを元に日の実績を登録する'''
+    print("*****[#ajax_dateoutput_create]start*****")
+    data = json.loads(request.body)
+    print(data)
+    target_date = data["target_date"]
+    if (target_date != ''):
+        year, month, date_index, week_tuple = get_date(target_date)
+        outputs = data["outputs"]
+        print(outputs)
+        for obj in outputs:
+            # TODO 登録と更新の場合分け
+            if obj["id"] != "":
+                # 更新
+                numberObjectiveOutput = NumberObjectiveOutput.objects.get(id=int(obj["id"]))
+                numberObjectiveOutput.output_value = int(obj["value"])
+                numberObjectiveOutput.save()
+            else:
+                master = NumberObjectiveMaster.objects.get(id=int(obj["master_id"]))
+                # TODO エラーハンドリング
+                if master:
+                    numberObjectiveOutput = NumberObjectiveOutput(
+                        master_id = master,
+                        year = week_tuple[0],
+                        week_index = week_tuple[1],
+                        date_index = date_index,
+                        output_value = int(obj["value"]),
+                    )
+                    numberObjectiveOutput.save()
+    return JsonResponse({"target_date":target_date})
 
 @login_required
 def display_week_objective_form(request, datestr):
