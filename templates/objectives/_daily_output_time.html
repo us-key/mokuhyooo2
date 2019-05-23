@@ -12,11 +12,11 @@
 <!-- 割り算は組み込みフィルター -->
 <td>
     {% if numObj.summary_kind == 'S' %}
-    {{ numObj.sumval|default_if_none:0 }}
+    {{ numObj.sumval|num_to_time }}
     /
     {{ numObj.sumval|percentie:numObj.objective_value }} %
     {% elif numObj.summary_kind == 'A' %}
-    {{ numObj.sumval|dividie:numObj.cnt }}
+    {{ numObj.sumval|dividie:numObj.cnt|num_to_time }}
     /
     {{ numObj.sumval|dividie:numObj.cnt|percentie:numObj.objective_value }} %
     {% endif %}
