@@ -11,7 +11,10 @@ def dividie(value, args):
 
 @register.filter
 def percentie(value, args):
-    return dividie(value*100, args)
+    if value is None or args is None or value == 0 or args == 0:
+        return 0
+    else:
+        return dividie(value*100, args)
 
 @register.filter
 def num_to_time(value):
