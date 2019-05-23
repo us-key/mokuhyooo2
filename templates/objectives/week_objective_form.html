@@ -47,8 +47,8 @@
                     }),
                     timeout: 10000,
                 })
-                .done(function(target_date){
-                    console.log("週目標登録完了：" + target_data)
+                .done(function(){
+                    console.log("週目標登録完了")
                     window.location.href = "{% url 'objectives:index' %}";
                 })
             }

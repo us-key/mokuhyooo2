@@ -194,7 +194,7 @@ def ajax_weekobj_create(request):
                 objective_value = int(obj["value"]),
             )
             numberObjective.save()
-    return HttpResponse(target_date)
+    return JsonResponse({"target_date":target_date})
 
 @login_required
 def ajax_dateoutput_create(request):
