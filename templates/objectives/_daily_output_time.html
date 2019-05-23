@@ -14,10 +14,10 @@
     {% if numObj.summary_kind == 'S' %}
     {{ numObj.sumval|default_if_none:0 }}
     /
-    {{ numObj.sumval|percentie:numObj.objective_value }}
+    {{ numObj.sumval|percentie:numObj.objective_value }} %
     {% elif numObj.summary_kind == 'A' %}
     {{ numObj.sumval|dividie:numObj.cnt }}
     /
-    {{ numObj.sumval|dividie:numObj.cnt|percentie:numObj.objective_value }}
+    {{ numObj.sumval|dividie:numObj.cnt|percentie:numObj.objective_value }} %
     {% endif %}
 </td>
