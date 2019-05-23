@@ -10,8 +10,12 @@ def dividie(value, args):
         return value // args
 
 @register.filter
+def percentie(value, args):
+    return dividie(value*100, args)
+
+@register.filter
 def num_to_time(value):
     if value is None:
         return ""
     # 時:分に変換
-    return str(value // 60) + ":" + str(value % 60)
+    return str(value // 60) + ":" + ("00" + str(value % 60))[-2:]

@@ -13,10 +13,11 @@
 <td>
     {% if numObj.summary_kind == 'S' %}
     {{ numObj.sumval|default_if_none:0 }}
+    /
+    {{ numObj.sumval|percentie:numObj.objective_value }} %
     {% elif numObj.summary_kind == 'A' %}
-    {{ numObj.sumval | dividie:numObj.cnt }}
+    {{ numObj.sumval|dividie:numObj.cnt }}
+    /
+    {{ numObj.sumval|dividie:numObj.cnt|percentie:numObj.objective_value }} %
     {% endif %}
-    <!-- 目標値/実績合計or平均値 -->
-    / {{ numObj.objective_value | dividie:numObj.sumval | dividie:numObj.cnt }}
-    
 </td>
