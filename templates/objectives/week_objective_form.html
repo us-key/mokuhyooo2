@@ -31,8 +31,13 @@
                     objectives.push(obj); 
                 }
             });
-            if (objectives.length == 0){
-                $(".msg-area").text("数値目標の入力がありません。");
+            if (free_word == ""){
+                $("#w_fi").addClass("is-invalid");
+                $("#invalid-fb").text("入力してください。");
+            } else if (objectives.length == 0){
+                $("#w_fi").removeClass("is-invalid");
+                $("#invalid-fb").text("");
+                $(".msg-area").text("数値目標を最低1つ入力してください。");
             } else {
                 var token = '{{csrf_token}}';
                 $.ajax({
@@ -59,8 +64,9 @@
 <div class="row">
     <!-- 自由入力 -->
     <div class="col-12">
+        <div id="invalid-fb"></div>
         <div class="form-group objective-review-group">
-            <textarea class='form-control objective-review-input' rows='6'>{{ weekFreeObjective.free_word|default_if_none:"" }}</textarea>
+            <textarea id="w_fi" class='form-control objective-review-input' rows='6'>{{ weekFreeObjective.free_word|default_if_none:"" }}</textarea>
         </div>
     </div>
     <!-- 数値目標 -->
