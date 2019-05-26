@@ -1,10 +1,13 @@
+{% load calculator %}
 <td>
     <input class="form-control wk_num_objective input_num input_obj" 
            type="number"
            id="OBJ_N_{{ master.id }}"/>
 </td>
 <td>
-    <input class="form-control wk_num_objective input_num input_lastwk" 
-           type="number"
-           id="LW_N_{{ master.id }}"/>
+    {% if master.summary_kind == 'S' %}
+    {{ master.sumval|default_if_none:0 }}
+    {% elif master.summary_kind == 'A' %}
+    {{ master.sumval|dividie:master.cnt }}
+    {% endif %}
 </td>

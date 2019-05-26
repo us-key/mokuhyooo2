@@ -234,14 +234,31 @@ def display_week_objective_form(request, datestr):
     start_date, end_date = get_week_start_and_end(datestr)
     start_date_str = start_date.strftime("%Y-%m-%d")
     end_date_str = end_date.strftime("%Y-%m-%d")
-    numberObjectiveMaster = NumberObjectiveMaster.objects.filter(user=request.user, valid_flag="1")
-
-
+    # 1週前の実績取得：7日前の日付を元に取得
+    year, month, date_index, week_tuple = get_date_diff(datestr, -7)
+    #numberObjectiveMaster = NumberObjectiveMaster.objects.filter(user=request.user, valid_flag="1")
+    numObj = NumberObjectiveMaster.objects.raw(
+        '''
+        select m.*, o_sum.sumval, o_sum.cnt
+        from objectives_numberobjectivemaster m
+        left outer join 
+        (
+            select master_id_id, year, week_index, sum(output_value) sumval, count(*) cnt
+            from objectives_numberobjectiveoutput o
+            group by master_id_id, year, week_index
+        ) o_sum
+        on m.id = o_sum.master_id_id
+        and o_sum.year = %s
+        and o_sum.week_index = %s
+        where m.user_id = %s
+        and   m.valid_flag = '1'
+        ''' % (week_tuple[0], week_tuple[1], request.user.id)
+    )
 
     return render(request, 'objectives/week_objective_form.html', {
         'start_date_str': start_date_str,
         'end_date_str': end_date_str,
-        'masters': numberObjectiveMaster,
+        'masters': numObj,
     })
 
 def get_free_input(input_unit, input_kind, target_date_str, user):
@@ -268,6 +285,12 @@ def get_date(target_date_str):
     date_index = (target_date - datetime.strptime('{year}-01-01'.format(year=year), '%Y-%m-%d')).days + 1
     week_tuple = target_date.isocalendar() #isocalendar:年,週番号,曜日番号
     return year, month, date_index, week_tuple
+
+def get_date_diff(target_date_str, diff):
+    '''対象日付から一定の日付を加算or減算した日付を元にget_dateする
+    '''
+    target_date = datetime.strptime(target_date_str, '%Y-%m-%d') + timedelta(diff)
+    return get_date(datetime.strftime(target_date, '%Y-%m-%d'))
 
 def get_week_start_and_end(target_date_str):
     '''対象日付を含む週の開始日・終了日(datetime)を返却する'''

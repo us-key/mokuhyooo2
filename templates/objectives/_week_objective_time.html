@@ -1,3 +1,4 @@
+{% load calculator %}
 <td>
     <input with="time" 
            class="form-control wk_num_objective input_ti input_obj" 
@@ -5,8 +6,9 @@
            id="OBJ_T_{{ master.id }}"/>
 </td>
 <td>
-    <input with="time" 
-           class="form-control wk_num_objective input_ti input_lastwk" 
-           type="text"
-           id="LW_T_{{ master.id }}"/>
+    {% if master.summary_kind == 'S' %}
+    {{ master.sumval|num_to_time }}
+    {% elif master.summary_kind == 'A' %}
+    {{ master.sumval|dividie:master.cnt|num_to_time }}
+    {% endif %}
 </td>
