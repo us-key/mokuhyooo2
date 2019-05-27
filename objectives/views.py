@@ -80,20 +80,20 @@ def get_date_data(request, display_date):
         select oo.id, m.id masterid, m.name, m.number_kind, m.summary_kind, o.objective_value, oo_sum.sumval, oo.output_value, oo_sum.cnt
         from objectives_numberobjectivemaster m
         left join objectives_numberobjective o
-        on m.id = o.master_id_id
+        on m.id = o.master_id
         and m.user_id = %s
         left outer join 
         (
-            select master_id_id, year, week_index, sum(output_value) sumval, count(*) cnt
+            select master_id, year, week_index, sum(output_value) sumval, count(*) cnt
             from objectives_numberobjectiveoutput
-            group by master_id_id, year, week_index
+            group by master_id, year, week_index
         ) oo_sum
-        on o.master_id_id = oo_sum.master_id_id
+        on o.master_id = oo_sum.master_id
         and o.year = oo_sum.year
         and o.week_index = oo_sum.week_index
 
         left outer join objectives_numberobjectiveoutput oo
-        on o.master_id_id = oo.master_id_id
+        on o.master_id = oo.master_id
         and o.year = oo.year
         and o.week_index = oo.week_index
         and oo.date_index = %s
@@ -219,7 +219,7 @@ def ajax_dateoutput_create(request):
                 # TODO エラーハンドリング
                 if master:
                     numberObjectiveOutput = NumberObjectiveOutput(
-                        master_id = master,
+                        master = master,
                         year = week_tuple[0],
                         week_index = week_tuple[1],
                         date_index = date_index,
@@ -243,11 +243,11 @@ def display_week_objective_form(request, datestr):
         from objectives_numberobjectivemaster m
         left outer join 
         (
-            select master_id_id, year, week_index, sum(output_value) sumval, count(*) cnt
+            select master_id, year, week_index, sum(output_value) sumval, count(*) cnt
             from objectives_numberobjectiveoutput o
-            group by master_id_id, year, week_index
+            group by master_id, year, week_index
         ) o_sum
-        on m.id = o_sum.master_id_id
+        on m.id = o_sum.master_id
         and o_sum.year = %s
         and o_sum.week_index = %s
         where m.user_id = %s

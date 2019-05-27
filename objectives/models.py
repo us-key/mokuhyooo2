@@ -89,7 +89,7 @@ class NumberObjective(models.Model):
     ・週番号
     ・目標値：時間の場合は分単位で記録、時刻の場合は00:00基準で分を記録
     '''
-    master_id = models.ForeignKey(
+    master = models.ForeignKey(
         NumberObjectiveMaster,
         on_delete=models.CASCADE,
     )
@@ -105,7 +105,7 @@ class NumberObjectiveOutput(models.Model):
     ・日付番号：日付の番号
     ・実績値：時間の場合は分単位で記録、時刻の場合は00:00基準で分を記録
     '''
-    master_id = models.ForeignKey(
+    master = models.ForeignKey(
         NumberObjectiveMaster,
         on_delete=models.CASCADE,
     )
