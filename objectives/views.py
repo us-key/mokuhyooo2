@@ -39,7 +39,7 @@ class NumberObjectiveMasterCreateView(LoginRequiredMixin, CreateView):
 def display_index(request):
     today = date.today().strftime("%Y-%m-%d")
     # 今日日付でデータ取得
-    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective = get_date_data(request, today)
+    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList = get_date_data(request, today)
 
     return render(request, 'objectives/index.html', {
         'display_date': today,
@@ -47,25 +47,33 @@ def display_index(request):
         'dateFreeReview': dateFreeReview,
         'weekFreeObjective': weekFreeObjective,
         'numberObjective': numberObjective,
+        'objRevFlgList': objRevFlgList,
         })
 
 @login_required
 def display_date_data(request):
     # 指定された日付でデータ取得
     display_date = request.GET.get('target_date')
-    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective = get_date_data(request, display_date)
+    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList = get_date_data(request, display_date)
     return render(request, 'objectives/index.html', {
         'display_date': display_date,
         'dateFreeObjective': dateFreeObjective,
         'dateFreeReview': dateFreeReview,
         'weekFreeObjective': weekFreeObjective,
         'numberObjective': numberObjective,
+        'objRevFlgList': objRevFlgList,
         })
 
 @login_required
 def get_date_data(request, display_date):
-    '''指定された日付のフリーワード(目標・振り返り)、数値目標を取得
-    数値目標は指定された日付の週に目標として設定されたものを表示
+    '''以下のデータを取得
+    ・指定された日付の以下データ
+    　・フリーワード(目標・振り返り)
+    　・指定された日付の数値目標、実績値
+    　⇒数値目標は指定された日付の週に目標として設定されたものを表示
+    　・指定された日付の週のフリーワード(目標)
+    　・年、月の目標設定有無
+    　・前年、前月、前週の振り返り有無(目標が設定されている場合のみ)
     '''
     # 返却する値の初期化
     year, month, date_index, week_tuple = get_date(display_date)
@@ -104,10 +112,29 @@ def get_date_data(request, display_date):
     )
     print(list(numberObjective))
     # 自由入力の取得
-    dateFreeObjective = get_free_input('D', 'O', display_date, request.user).first()
-    dateFreeReview = get_free_input('D', 'R', display_date, request.user).first()
-    weekFreeObjective = get_free_input('W', 'O', display_date, request.user).first()
-    return dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective
+    dateFreeObjective = get_free_input('D', 'O', year, month, date_index, week_tuple, request.user).first()
+    dateFreeReview = get_free_input('D', 'R', year, month, date_index, week_tuple, request.user).first()
+    weekFreeObjective = get_free_input('W', 'O', year, month, date_index, week_tuple, request.user).first()
+    # 前年、前月取得
+    pYear = str(int(year) - 1)
+    (pMYear, pMonth) = (year, str(int(month) - 1)) if int(month) > 1 else (str(int(year) - 1), "12")
+    # 前週の変数取得
+    pWYear, pWMonth, pDate_index, pWeek_tuple = get_date_diff(display_date, -7)
+
+    # 年・月の目標設定有無(有：1、無：0)
+    # 年・月・週の振り返り設定有無(目標設定有&振り返り設定無：0、それ以外：1)
+    objRevFlgList = {
+        'YO': '1' if get_free_input('Y','O', year, month, date_index, week_tuple, request.user) else '0',
+        'MO': '1' if get_free_input('M','O', year, month, date_index, week_tuple, request.user) else '0',
+        # 使わない項目は0渡す
+        'YR': '0' if (get_free_input('Y','O', pYear, '0', '0', ['0','0','0'], request.user)
+                and not get_free_input('Y','R', pYear, '0', '0', ['0','0','0'], request.user)) else '1',
+        'MR': '0' if (get_free_input('M','O', pMYear, pMonth, '0', ['0','0','0'], request.user)
+                and not get_free_input('M','R', pMYear, pMonth, '0', ['0','0','0'], request.user)) else '1',
+        'WR': '0' if (get_free_input('W','O', '0', '0', '0', pWeek_tuple, request.user)
+                and not get_free_input('W','R', '0', '0', '0', pWeek_tuple, request.user)) else '1',
+    }
+    return dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList
 
 @login_required
 def ajax_freeword_register(request):
@@ -158,7 +185,8 @@ def ajax_freeword_get(request):
     input_kind = request.GET['input_kind']
     user_id = request.GET['user']
     user = User.objects.get(id=user_id)
-    freeInput = get_free_input(input_unit, input_kind, request.GET['input_date'], user)
+    year, month, date_index, week_tuple = get_date(request.GET['input_date'])
+    freeInput = get_free_input(input_unit, input_kind, year, month, date_index, week_tuple, user)
     json = serializers.serialize('json', freeInput, ensure_ascii=False)
     return HttpResponse(json, content_type='application/json; charset=UTF-8')
 
@@ -261,9 +289,8 @@ def display_week_objective_form(request, datestr):
         'masters': numObj,
     })
 
-def get_free_input(input_unit, input_kind, target_date_str, user):
+def get_free_input(input_unit, input_kind, year, month, date_index, week_tuple, user):
     '''FreeInput取得のクエリを実行し結果を返却する'''
-    year, month, date_index, week_tuple = get_date(target_date_str)
     # 日番号：年・月・週・日
     day_index_dic = {'Y':year,'M':month,'W':week_tuple[1],'D':date_index}
     # 年：isocalendarは第１木曜の含まれる週を第１週とする週単位となるため、年が実際の年と異なる場合アリ
