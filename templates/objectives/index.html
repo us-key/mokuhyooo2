@@ -142,12 +142,13 @@
         })
     });
 </script>
+<!-- 目標・振返り作成状況によりメッセージ表示 -->
 {% for k,v in objRevFlgList.items %}
     {% if v == '0' %}
     <div class="alert alert-warning alert-dismissable" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         {{ k|create_obj_rev_msg }}
-        <a href="" class="alert-link">作成</a>
+        <a href="{{ k|create_obj_rev_link:display_date }}" class="alert-link">作成</a>
     </div>
     {% endif %}
 {% endfor %}

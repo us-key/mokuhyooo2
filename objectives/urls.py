@@ -9,6 +9,7 @@ urlpatterns = [
     path('master', views.NumberObjectiveMasterListView.as_view(), name='master_list'),
     path('master/create', views.NumberObjectiveMasterCreateView.as_view(), name='master_create'),
     path('week_objective/create/<str:datestr>', views.display_week_objective_form, name='week_objective_create'),
+    path('objrev/<str:key>/<str:target_date>', views.display_objrev_form, name='objrev_create'),
 
     # ajax
     path('ajax/freeword/register', views.ajax_freeword_register, name='ajax_freeword_register'),

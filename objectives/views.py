@@ -54,9 +54,13 @@ def display_index(request):
 def display_date_data(request):
     # 指定された日付でデータ取得
     display_date = request.GET.get('target_date')
-    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList = get_date_data(request, display_date)
+    return display_date_data_from_view(request, display_date)
+
+def display_date_data_from_view(request, target_date):
+    '''templateからではなくviewでtarget_date指定してindex表示する'''
+    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList = get_date_data(request, target_date)
     return render(request, 'objectives/index.html', {
-        'display_date': display_date,
+        'display_date': target_date,
         'dateFreeObjective': dateFreeObjective,
         'dateFreeReview': dateFreeReview,
         'weekFreeObjective': weekFreeObjective,
@@ -119,10 +123,12 @@ def get_date_data(request, display_date):
     pYear = str(int(year) - 1)
     (pMYear, pMonth) = (year, str(int(month) - 1)) if int(month) > 1 else (str(int(year) - 1), "12")
     # 前週の変数取得
-    pWYear, pWMonth, pDate_index, pWeek_tuple = get_date_diff(display_date, -7)
+    pWYear, pWMonth, pWDate_index, pWWeek_tuple = get_date(get_date_str_diff(display_date, -7))
+    # 前日の変数取得
+    pDYear, pDMonth, pDDate_index, pDWeek_tuple = get_date(get_date_str_diff(display_date, -1))
 
     # 年・月の目標設定有無(有：1、無：0)
-    # 年・月・週の振り返り設定有無(目標設定有&振り返り設定無：0、それ以外：1)
+    # 年・月・週・日の振り返り設定有無(目標設定有&振り返り設定無：0、それ以外：1)
     objRevFlgList = {
         'YO': '1' if get_free_input('Y','O', year, month, date_index, week_tuple, request.user) else '0',
         'MO': '1' if get_free_input('M','O', year, month, date_index, week_tuple, request.user) else '0',
@@ -131,8 +137,10 @@ def get_date_data(request, display_date):
                 and not get_free_input('Y','R', pYear, '0', '0', ['0','0','0'], request.user)) else '1',
         'MR': '0' if (get_free_input('M','O', pMYear, pMonth, '0', ['0','0','0'], request.user)
                 and not get_free_input('M','R', pMYear, pMonth, '0', ['0','0','0'], request.user)) else '1',
-        'WR': '0' if (get_free_input('W','O', '0', '0', '0', pWeek_tuple, request.user)
-                and not get_free_input('W','R', '0', '0', '0', pWeek_tuple, request.user)) else '1',
+        'WR': '0' if (get_free_input('W','O', '0', '0', '0', pWWeek_tuple, request.user)
+                and not get_free_input('W','R', '0', '0', '0', pWWeek_tuple, request.user)) else '1',
+        'DR': '0' if (get_free_input('D','O', pDYear, '0', pDDate_index, ['0','0','0'], request.user)
+                and not get_free_input('D','R', pDYear, '0', pDDate_index, ['0','0','0'], request.user)) else '1',
     }
     return dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList
 
@@ -263,7 +271,7 @@ def display_week_objective_form(request, datestr):
     start_date_str = start_date.strftime("%Y-%m-%d")
     end_date_str = end_date.strftime("%Y-%m-%d")
     # 1週前の実績取得：7日前の日付を元に取得
-    year, month, date_index, week_tuple = get_date_diff(datestr, -7)
+    year, month, date_index, week_tuple = get_date(get_date_str_diff(datestr, -7))
     #numberObjectiveMaster = NumberObjectiveMaster.objects.filter(user=request.user, valid_flag="1")
     numObj = NumberObjectiveMaster.objects.raw(
         '''
@@ -289,6 +297,14 @@ def display_week_objective_form(request, datestr):
         'masters': numObj,
     })
 
+@login_required
+def display_objrev_form(request, key, target_date):
+    if key[:1] == "D":
+        target_date = get_date_str_diff(target_date, -1)
+        return display_date_data_from_view(request, target_date)
+    return render(request, 'objectives/objrev_form.html')
+
+
 def get_free_input(input_unit, input_kind, year, month, date_index, week_tuple, user):
     '''FreeInput取得のクエリを実行し結果を返却する'''
     # 日番号：年・月・週・日
@@ -313,11 +329,11 @@ def get_date(target_date_str):
     week_tuple = target_date.isocalendar() #isocalendar:年,週番号,曜日番号
     return year, month, date_index, week_tuple
 
-def get_date_diff(target_date_str, diff):
-    '''対象日付から一定の日付を加算or減算した日付を元にget_dateする
+def get_date_str_diff(target_date_str, diff):
+    '''対象日付から一定の日付を加算or減算した日付の文字列を得る
     '''
     target_date = datetime.strptime(target_date_str, '%Y-%m-%d') + timedelta(diff)
-    return get_date(datetime.strftime(target_date, '%Y-%m-%d'))
+    return datetime.strftime(target_date, '%Y-%m-%d')
 
 def get_week_start_and_end(target_date_str):
     '''対象日付を含む週の開始日・終了日(datetime)を返却する'''
