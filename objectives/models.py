@@ -85,7 +85,7 @@ class NumberObjectiveMaster(models.Model):
 class NumberObjective(models.Model):
     '''数値目標：週単位での数値目標の値を設定
     ・数値目標マスタID
-    ・年
+    ・年(isoclendar)
     ・週番号
     ・目標値：時間の場合は分単位で記録、時刻の場合は00:00基準で分を記録
     '''
@@ -93,14 +93,14 @@ class NumberObjective(models.Model):
         NumberObjectiveMaster,
         on_delete=models.CASCADE,
     )
-    year = models.PositiveSmallIntegerField()
+    iso_year = models.PositiveSmallIntegerField()
     week_index = models.PositiveSmallIntegerField()
     objective_value = models.PositiveSmallIntegerField()
 
 class NumberObjectiveOutput(models.Model):
     '''数値目標実績：日毎の数値目標実績を登録
     ・数値目標マスタID
-    ・年
+    ・年(isocalendar)
     ・週番号
     ・日付番号：日付の番号
     ・実績値：時間の場合は分単位で記録、時刻の場合は00:00基準で分を記録
@@ -109,7 +109,7 @@ class NumberObjectiveOutput(models.Model):
         NumberObjectiveMaster,
         on_delete=models.CASCADE,
     )
-    year = models.PositiveSmallIntegerField()
+    iso_year = models.PositiveSmallIntegerField()
     week_index = models.PositiveSmallIntegerField()
     date_index = models.PositiveSmallIntegerField()
     output_value = models.PositiveSmallIntegerField()
