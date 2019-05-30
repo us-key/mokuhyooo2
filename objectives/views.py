@@ -96,21 +96,21 @@ def get_date_data(request, display_date):
         and m.user_id = %s
         left outer join 
         (
-            select master_id, year, week_index, sum(output_value) sumval, count(*) cnt
+            select master_id, iso_year, week_index, sum(output_value) sumval, count(*) cnt
             from objectives_numberobjectiveoutput
-            group by master_id, year, week_index
+            group by master_id, iso_year, week_index
         ) oo_sum
         on o.master_id = oo_sum.master_id
-        and o.year = oo_sum.year
+        and o.iso_year = oo_sum.iso_year
         and o.week_index = oo_sum.week_index
 
         left outer join objectives_numberobjectiveoutput oo
         on o.master_id = oo.master_id
-        and o.year = oo.year
+        and o.iso_year = oo.iso_year
         and o.week_index = oo.week_index
         and oo.date_index = %s
 
-        where o.year = %s
+        where o.iso_year = %s
         and o.week_index = %s
         ''' % (request.user.id, date_index, week_tuple[0], week_tuple[1])
     )
@@ -225,7 +225,7 @@ def ajax_weekobj_create(request):
         for obj in objectives:
             numberObjective = NumberObjective(
                 master_id = NumberObjectiveMaster.objects.get(id=int(obj["master_id"])),
-                year = week_tuple[0],
+                iso_year = week_tuple[0],
                 week_index = week_tuple[1],
                 objective_value = int(obj["value"]),
             )
@@ -256,7 +256,7 @@ def ajax_dateoutput_create(request):
                 if master:
                     numberObjectiveOutput = NumberObjectiveOutput(
                         master = master,
-                        year = week_tuple[0],
+                        iso_year = week_tuple[0],
                         week_index = week_tuple[1],
                         date_index = date_index,
                         output_value = int(obj["value"]),
@@ -279,12 +279,12 @@ def display_week_objective_form(request, datestr):
         from objectives_numberobjectivemaster m
         left outer join 
         (
-            select master_id, year, week_index, sum(output_value) sumval, count(*) cnt
+            select master_id, iso_year, week_index, sum(output_value) sumval, count(*) cnt
             from objectives_numberobjectiveoutput o
-            group by master_id, year, week_index
+            group by master_id, iso_year, week_index
         ) o_sum
         on m.id = o_sum.master_id
-        and o_sum.year = %s
+        and o_sum.iso_year = %s
         and o_sum.week_index = %s
         where m.user_id = %s
         and   m.valid_flag = '1'
