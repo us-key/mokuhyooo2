@@ -224,7 +224,7 @@ def ajax_weekobj_create(request):
         print(objectives)
         for obj in objectives:
             numberObjective = NumberObjective(
-                master_id = NumberObjectiveMaster.objects.get(id=int(obj["master_id"])),
+                master = NumberObjectiveMaster.objects.get(id=int(obj["master_id"])),
                 iso_year = week_tuple[0],
                 week_index = week_tuple[1],
                 objective_value = int(obj["value"]),
@@ -256,6 +256,8 @@ def ajax_dateoutput_create(request):
                 if master:
                     numberObjectiveOutput = NumberObjectiveOutput(
                         master = master,
+                        year = year,
+                        month = month,
                         iso_year = week_tuple[0],
                         week_index = week_tuple[1],
                         date_index = date_index,

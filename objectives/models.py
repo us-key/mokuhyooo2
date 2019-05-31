@@ -100,7 +100,9 @@ class NumberObjective(models.Model):
 class NumberObjectiveOutput(models.Model):
     '''数値目標実績：日毎の数値目標実績を登録
     ・数値目標マスタID
-    ・年(isocalendar)
+    ・年
+    ・月
+    ・年(isocalendar)：週での集計時に使用
     ・週番号
     ・日付番号：日付の番号
     ・実績値：時間の場合は分単位で記録、時刻の場合は00:00基準で分を記録
@@ -109,6 +111,8 @@ class NumberObjectiveOutput(models.Model):
         NumberObjectiveMaster,
         on_delete=models.CASCADE,
     )
+    year = models.PositiveSmallIntegerField()
+    month = models.PositiveSmallIntegerField()
     iso_year = models.PositiveSmallIntegerField()
     week_index = models.PositiveSmallIntegerField()
     date_index = models.PositiveSmallIntegerField()
