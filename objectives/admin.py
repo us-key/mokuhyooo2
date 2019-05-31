@@ -12,7 +12,7 @@ class NumberObjectiveAdmin(admin.ModelAdmin):
     list_display = ('master','iso_year','week_index','objective_value')
 
 class NumberObjectiveOutputAdmin(admin.ModelAdmin):
-    list_display = ('master','iso_year','week_index','date_index','output_value')
+    list_display = ('master','year','month','iso_year','week_index','date_index','output_value')
 
 # Register your models here.
 admin.site.register(User, UserAdmin)
