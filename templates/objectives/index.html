@@ -23,7 +23,8 @@
         });
         $('.modalOpener').on("click", function(e){
             e.preventDefault();
-            // aタグのID設定
+            // 処理前に Loading 画像を表示
+            dispLoading("処理中...");
 
             // freeInput取得
             var input_unit = $(this).attr("id").split("_")[0];
@@ -53,10 +54,13 @@
                 a_tag_id = input_unit + "_" + input_kind + "_link_" + id;
                 $('.modal_link').attr('id', a_tag_id);
                 $('.modal-textarea').val(textarea_text);
-            })
+            });
         })
         $(".fw_post").on("click", function(e){
             e.preventDefault();
+            // 処理前に Loading 画像を表示
+            dispLoading("処理中...");
+
             var free_word = $(this).parents(".objective-review-group").children(".objective-review-input").val();
             var date = $('#datetimepicker').val();
             var input_unit = $(this).attr("id").split("_")[0];
@@ -88,6 +92,9 @@
         });
         // 日の実績値を投げる
         $(".do_post").on("click", function(e){
+            // 処理前に Loading 画像を表示
+            dispLoading("処理中...");
+
             e.preventDefault();
             var target_date = $('#datetimepicker').val();
             // 実績値取得して投げる
@@ -133,7 +140,7 @@
                     timeout: 10000,
                 })
                 .done(function(){
-                    console.log("実績登録完了")
+                    alert("実績登録完了")
                     location.reload();
                     // TODO 一旦リロードするが、他項目など登録していないと消えてしまうため、
                     // 最終的にはajaxでid受け取って上書きするようにする。
