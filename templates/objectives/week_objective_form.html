@@ -39,6 +39,8 @@
                 $("#invalid-fb").text("");
                 $(".msg-area").text("数値目標を最低1つ入力してください。");
             } else {
+                // 処理前に Loading 画像を表示
+                dispLoading("処理中...");
                 var token = '{{csrf_token}}';
                 $.ajax({
                     url: "{% url 'objectives:ajax_weekobj_create' %}",
@@ -56,6 +58,9 @@
                     console.log("週目標登録完了")
                     window.location.href = "{% url 'objectives:index' %}";
                 })
+                .always(function(){
+                    removeLoading();
+                });
             }
         })
     })

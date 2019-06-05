@@ -54,6 +54,9 @@
                 a_tag_id = input_unit + "_" + input_kind + "_link_" + id;
                 $('.modal_link').attr('id', a_tag_id);
                 $('.modal-textarea').val(textarea_text);
+            })
+            .always(function(){
+                removeLoading();
             });
         })
         $(".fw_post").on("click", function(e){
@@ -89,11 +92,12 @@
                 // 最終的にはajaxでid受け取って上書きするようにする。
                 location.reload();
             })
+            .always(function(){
+                removeLoading();
+            });
         });
         // 日の実績値を投げる
         $(".do_post").on("click", function(e){
-            // 処理前に Loading 画像を表示
-            dispLoading("処理中...");
 
             e.preventDefault();
             var target_date = $('#datetimepicker').val();
@@ -127,6 +131,8 @@
             if (outputs.length == 0){
                 $(".msg-area").text("実績の入力がありません。");
             } else {
+                // 処理前に Loading 画像を表示
+                dispLoading("処理中...");
                 var token = '{{csrf_token}}';
                 $.ajax({
                     url: "{% url 'objectives:ajax_dateoutput_create' %}",
@@ -144,7 +150,10 @@
                     location.reload();
                     // TODO 一旦リロードするが、他項目など登録していないと消えてしまうため、
                     // 最終的にはajaxでid受け取って上書きするようにする。
-            })
+                })
+                .always(function(){
+                    removeLoading();
+                });
             }
         })
     });
