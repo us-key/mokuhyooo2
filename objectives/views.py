@@ -116,9 +116,9 @@ def get_date_data(request, display_date):
     )
     print(list(numberObjective))
     # 自由入力の取得
-    dateFreeObjective = get_free_input('D', 'O', year, month, date_index, week_tuple, request.user).first()
-    dateFreeReview = get_free_input('D', 'R', year, month, date_index, week_tuple, request.user).first()
-    weekFreeObjective = get_free_input('W', 'O', year, month, date_index, week_tuple, request.user).first()
+    dateFreeObjective = get_free_input_date(year, date_index, "O", request.user).first()
+    dateFreeReview = get_free_input_date(year, date_index, "R", request.user).first()
+    weekFreeObjective = get_free_input_week(week_tuple[0], week_tuple[1], "O", request.user).first()
     # 前年、前月取得
     pYear = str(int(year) - 1)
     (pMYear, pMonth) = (year, str(int(month) - 1)) if int(month) > 1 else (str(int(year) - 1), "12")
@@ -130,17 +130,17 @@ def get_date_data(request, display_date):
     # 年・月の目標設定有無(有：1、無：0)
     # 年・月・週・日の振り返り設定有無(目標設定有&振り返り設定無：0、それ以外：1)
     objRevFlgList = {
-        'YO': '1' if get_free_input('Y','O', year, month, date_index, week_tuple, request.user) else '0',
-        'MO': '1' if get_free_input('M','O', year, month, date_index, week_tuple, request.user) else '0',
+        'TYO': '1' if get_free_input_year(year, "O", request.user) else '0',
+        'TMO': '1' if get_free_input_month(year, month, "O", request.user) else '0',
         # 使わない項目は0渡す
-        'YR': '0' if (get_free_input('Y','O', pYear, '0', '0', ['0','0','0'], request.user)
-                and not get_free_input('Y','R', pYear, '0', '0', ['0','0','0'], request.user)) else '1',
-        'MR': '0' if (get_free_input('M','O', pMYear, pMonth, '0', ['0','0','0'], request.user)
-                and not get_free_input('M','R', pMYear, pMonth, '0', ['0','0','0'], request.user)) else '1',
-        'WR': '0' if (get_free_input('W','O', '0', '0', '0', pWWeek_tuple, request.user)
-                and not get_free_input('W','R', '0', '0', '0', pWWeek_tuple, request.user)) else '1',
-        'DR': '0' if (get_free_input('D','O', pDYear, '0', pDDate_index, ['0','0','0'], request.user)
-                and not get_free_input('D','R', pDYear, '0', pDDate_index, ['0','0','0'], request.user)) else '1',
+        'PYR': '0' if (get_free_input_year(pYear, "O", request.user)
+                and not get_free_input_year(pYear, "R", request.user)) else '1',
+        'PMR': '0' if (get_free_input_month(pMYear, pMonth, "O", request.user)
+                and not get_free_input_month(pMYear, pMonth, "R", request.user)) else '1',
+        'PWR': '0' if (get_free_input_week(pWWeek_tuple[0], pWWeek_tuple[1], "O", request.user)
+                and not get_free_input_week(pWWeek_tuple[0], pWWeek_tuple[1], "R", request.user)) else '1',
+        'PDR': '0' if (get_free_input_date(pDYear, pDDate_index, "O", request.user)
+                and not get_free_input_date(pDYear, pDDate_index, "R", request.user)) else '1',
     }
     return dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList
 
@@ -301,25 +301,127 @@ def display_week_objective_form(request, datestr):
 
 @login_required
 def display_objrev_form(request, key, target_date):
-    if key[:1] == "D":
-        target_date = get_date_str_diff(target_date, -1)
+    '''key 1桁目:T/P(This/Prev)
+           2桁目:Y/M/W/D(Year/Month/Week/Date)
+           3桁目:O/R(Objective/Review)
+       tartet_date 基準とする日付
+    '''
+    # 日：当日または前日のindexに飛ぶ
+    if key[1:2] == "D":
+        if key [:1] == "P":
+            target_date = get_date_str_diff(target_date, -1)
         return display_date_data_from_view(request, target_date)
-    return render(request, 'objectives/objrev_form.html')
+    
+    # 返却値の初期化
+    free_input_obj = {} # 目標自由入力
+    free_input_rev = {} # 振り返り自由入力
+    target_period_str = "" # 対象期間を表す文字列
+    
+    year, month, date_index, week_tuple = get_date(target_date)
+    # 目標作成時：目標のみ、振り返り作成時：目標＋振り返り
+    # 週
+    if key[1:2] == "W":
+        # 週の目標はdisplay_week_objective_form呼出
+        if key[:1] == "P":
+            target_date = get_date_str_diff(target_date, -7)
+        if key[2:] == "O":
+            return display_week_objective_form(request, target_date)
+        elif key[2:] == "R":
+            pYear, pMonth, pDate_index, pWeek_tuple = get_date(target_date)
+            free_input_obj = get_free_input_week(pWeek_tuple[0], pWeek_tuple[1], "O", request.user).first()
+            free_input_rev = get_free_input_week(pWeek_tuple[0], pWeek_tuple[1], "R", request.user).first()
+        # 対象期間
+        start_date, end_date = get_week_start_and_end(target_date)
+        start_date_str = start_date.strftime("%Y-%m-%d")
+        end_date_str = end_date.strftime("%Y-%m-%d")
+        target_period_str = "%s ~ %s" % (start_date_str, end_date_str)
 
+    # 月
+    elif key[1:2] == "M":
+        if key[:1] == "P":
+            (year, month) = (year, str(int(month) - 1)) if int(month) > 1 else (str(int(year) - 1), "12")
+        free_input_obj = get_free_input_month(year, month, "O", request.user).first()
+        if key[2:] == "R":
+            free_input_rev = get_free_input_month(yYear, month, "R", request.user).first()
+        # 対象期間
+        target_period_str = "%s年%s月" % (str(year), str(month))
+    # 年
+    elif key[1:2] == "Y":
+        if key[:1] == "P":
+            year = str(int(year) - 1)
+        free_input_obj = get_free_input_year(year, "O", request.user).first()
+        if key[2:] == "R":
+            free_input_rev = get_free_input_year(year, "R", request.user).first()
+        # 対象期間
+        target_period_str = "%s年" % str(year)
+
+    # TODO 振返りの場合、週・月・年で集計した定量目標の実績を表示する
+    
+    return render(request, 'objectives/objrev_form.html', {
+        'input_unit': key[1:2],
+        'input_kind': key[2:],
+        'free_input_obj': free_input_obj,
+        'free_input_rev': free_input_rev,
+        'target_period_str': target_period_str,
+    })
+
+def get_free_input_year(year, input_kind, user):
+    return FreeInput.objects.filter(
+        input_unit = "Y",
+        input_kind = input_kind,
+        year = year,
+        day_index = year,
+        user = user,
+    )
+
+def get_free_input_month(year, month, input_kind, user):
+    return FreeInput.objects.filter(
+        input_unit = "M",
+        input_kind = input_kind,
+        year = year,
+        day_index = month,
+        user = user,
+    )
+
+def get_free_input_week(isoyear, week_index, input_kind, user):
+    return FreeInput.objects.filter(
+        input_unit = "W",
+        input_kind = input_kind,
+        year = isoyear,
+        day_index = week_index,
+        user = user,
+    )
+
+def get_free_input_date(year, date_index, input_kind, user):
+    return FreeInput.objects.filter(
+        input_unit = "D",
+        input_kind = input_kind,
+        year = year,
+        day_index = date_index,
+        user = user,
+    )
 
 def get_free_input(input_unit, input_kind, year, month, date_index, week_tuple, user):
     '''FreeInput取得のクエリを実行し結果を返却する'''
-    # 日番号：年・月・週・日
-    day_index_dic = {'Y':year,'M':month,'W':week_tuple[1],'D':date_index}
-    # 年：isocalendarは第１木曜の含まれる週を第１週とする週単位となるため、年が実際の年と異なる場合アリ
-    register_year = week_tuple[0] if input_unit=='W' else year
-    return FreeInput.objects.filter(
-        input_unit=input_unit,
-        input_kind=input_kind,
-        year=register_year,
-        day_index=day_index_dic[input_unit],
-        user=user,
-    )
+    ret_dic = {
+        "Y": get_free_input_year(year, input_kind, user),
+        "M": get_free_input_month(year, month, input_kind, user),
+        "W": get_free_input_week(week_tuple[0], week_tuple[1], input_kind, user),
+        "D": get_free_input_date(year, date_index, input_kind, user),
+    }
+    return ret_dic[input_unit]
+
+    # # 日番号：年・月・週・日
+    # day_index_dic = {'Y':year,'M':month,'W':week_tuple[1],'D':date_index}
+    # # 年：isocalendarは第１木曜の含まれる週を第１週とする週単位となるため、年が実際の年と異なる場合アリ
+    # register_year = week_tuple[0] if input_unit=='W' else year
+    # return FreeInput.objects.filter(
+    #     input_unit=input_unit,
+    #     input_kind=input_kind,
+    #     year=register_year,
+    #     day_index=day_index_dic[input_unit],
+    #     user=user,
+    # )
 
 def get_date(target_date_str):
     '''対象日付の年、日付番号、isocalendarのtupleを返却する
