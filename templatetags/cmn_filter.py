@@ -14,3 +14,10 @@ def create_obj_rev_msg(key):
 def create_obj_rev_link(key, target_date):
     '''目標・振り返り作成のリンクを作成する'''
     return "/objectives/objrev/%s/%s" % (key, target_date)
+
+@register.filter
+def get_checkbox(key):
+    if key == "1":
+        return "fas fa-check-square"
+    else:
+        return "far fa-square"

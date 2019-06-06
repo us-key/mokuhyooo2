@@ -132,6 +132,9 @@ def get_date_data(request, display_date):
     objRevFlgList = {
         'TYO': '1' if get_free_input_year(year, "O", request.user) else '0',
         'TMO': '1' if get_free_input_month(year, month, "O", request.user) else '0',
+        'TYR': '1' if get_free_input_year(year, "R", request.user) else '0',
+        'TMR': '1' if get_free_input_month(year, month, "R", request.user) else '0',
+        'TWR': '1' if get_free_input_week(week_tuple[0], week_tuple[1], "R", request.user) else '0',
         # 使わない項目は0渡す
         'PYR': '0' if (get_free_input_year(pYear, "O", request.user)
                 and not get_free_input_year(pYear, "R", request.user)) else '1',
@@ -344,7 +347,7 @@ def display_objrev_form(request, key, target_date):
             (year, month) = (year, str(int(month) - 1)) if int(month) > 1 else (str(int(year) - 1), "12")
         free_input_obj = get_free_input_month(year, month, "O", request.user).first()
         if key[2:] == "R":
-            free_input_rev = get_free_input_month(yYear, month, "R", request.user).first()
+            free_input_rev = get_free_input_month(year, month, "R", request.user).first()
         # 対象期間
         target_period_str = "%s-%s" % (str(year), str(month).zfill(2))
         target_date_str = target_period_str

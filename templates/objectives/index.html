@@ -176,26 +176,26 @@
     </div>
     <div class="col-6">
         <p>
-            <i class="fas fa-check-square"></i>
-            <a class="modalOpener" id="Y_O" href="#" data-toggle="modal" data-target="#freecommentmodal">年目標</a>
+            <i class="{{ objRevFlgList.TYO|get_checkbox }}"></i>
+            <a href="{{ 'TYO'|create_obj_rev_link:display_date }}">年目標</a>
         </p>
         <p>
-            <i class="fas fa-check-square"></i>
-            <a class="modalOpener" id="M_O" href="#" data-toggle="modal" data-target="#freecommentmodal">月目標</a>
+            <i class="{{ objRevFlgList.TMO|get_checkbox }}"></i>
+            <a href="{{ 'TMO'|create_obj_rev_link:display_date }}">月目標</a>
         </p>
     </div>
     <div class="col-6">
         <p>
-            <i class="far fa-square"></i>
-            <a class="modalOpener" id="Y_R" href="#" data-toggle="modal" data-target="#freecommentmodal">年振返り</a>
+            <i class="{{ objRevFlgList.TYR|get_checkbox }}"></i>
+            <a href="{{ 'TYR'|create_obj_rev_link:display_date }}">年振返り</a>
         </p>
         <p>
-            <i class="far fa-square"></i>
-            <a class="modalOpener" id="M_R" href="#" data-toggle="modal" data-target="#freecommentmodal">月振返り</a>
+            <i class="{{ objRevFlgList.TMR|get_checkbox }}"></i>
+            <a href="{{ 'TMR'|create_obj_rev_link:display_date }}">月振返り</a>
         </p>
         <p>
-            <i class="far fa-square"></i>
-            <a class="modalOpener" id="W_R" href="#" data-toggle="modal" data-target="#freecommentmodal">週振返り</a>
+            <i class="{{ objRevFlgList.TWR|get_checkbox }}"></i>
+            <a href="{{ 'TWR'|create_obj_rev_link:display_date }}">週振返り</a>
         </p>
     </div>
 </div>
