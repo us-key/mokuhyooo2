@@ -316,6 +316,7 @@ def display_objrev_form(request, key, target_date):
     free_input_obj = {} # 目標自由入力
     free_input_rev = {} # 振り返り自由入力
     target_period_str = "" # 対象期間を表す文字列
+    target_date_str = "" # 対象日付(登録時に使用)を表す文字列
     
     year, month, date_index, week_tuple = get_date(target_date)
     # 目標作成時：目標のみ、振り返り作成時：目標＋振り返り
@@ -335,6 +336,7 @@ def display_objrev_form(request, key, target_date):
         start_date_str = start_date.strftime("%Y-%m-%d")
         end_date_str = end_date.strftime("%Y-%m-%d")
         target_period_str = "%s ~ %s" % (start_date_str, end_date_str)
+        target_date_str = start_date_str
 
     # 月
     elif key[1:2] == "M":
@@ -344,7 +346,8 @@ def display_objrev_form(request, key, target_date):
         if key[2:] == "R":
             free_input_rev = get_free_input_month(yYear, month, "R", request.user).first()
         # 対象期間
-        target_period_str = "%s年%s月" % (str(year), str(month))
+        target_period_str = "%s-%s" % (str(year), str(month).zfill(2))
+        target_date_str = target_period_str
     # 年
     elif key[1:2] == "Y":
         if key[:1] == "P":
@@ -353,7 +356,8 @@ def display_objrev_form(request, key, target_date):
         if key[2:] == "R":
             free_input_rev = get_free_input_year(year, "R", request.user).first()
         # 対象期間
-        target_period_str = "%s年" % str(year)
+        target_period_str = "%s" % str(year)
+        target_date_str = target_period_str
 
     # TODO 振返りの場合、週・月・年で集計した定量目標の実績を表示する
     
@@ -363,6 +367,7 @@ def display_objrev_form(request, key, target_date):
         'free_input_obj': free_input_obj,
         'free_input_rev': free_input_rev,
         'target_period_str': target_period_str,
+        'target_date_str': target_date_str,
     })
 
 def get_free_input_year(year, input_kind, user):
