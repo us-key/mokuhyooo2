@@ -1,0 +1,13 @@
+{% load calculator %}
+<!-- 目標値 -->
+{% if input_unit == "W" %}
+<td>{{ obj.objective_value|num_to_time }}</td>
+{% endif %}
+<!-- 合計or平均 -->
+<td>
+    {% if obj.summary_kind == 'S' %}
+    {{ obj.sumval|num_to_time }}
+    {% elif obj.summary_kind == 'A' %}
+    {{ obj.sumval|dividie:obj.cnt|num_to_time }}
+    {% endif %}
+</td>

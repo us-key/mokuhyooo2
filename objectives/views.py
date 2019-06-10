@@ -362,8 +362,68 @@ def display_objrev_form(request, key, target_date):
         target_period_str = "%s" % str(year)
         target_date_str = target_period_str
 
-    # TODO 振返りの場合、週・月・年で集計した定量目標の実績を表示する
-    
+    # 振返りの場合、週・月・年で集計した定量目標の実績を表示する
+    num_obj_rev = {}
+    if key[2:] == "R":
+        # 週
+        # 目標名、目標値、合計値、件数
+        if key[1:2] == "W":
+            num_obj_rev = NumberObjectiveMaster.objects.raw(
+            '''
+            select m.id, m.name, m.number_kind, m.summary_kind, o.objective_value, oo_sum.sumval, oo_sum.cnt
+            from objectives_numberobjectivemaster m
+            left join objectives_numberobjective o
+            on m.id = o.master_id
+            and m.user_id = %s
+            left outer join 
+            (
+                select master_id, iso_year, week_index, sum(output_value) sumval, count(*) cnt
+                from objectives_numberobjectiveoutput
+                group by master_id, iso_year, week_index
+            ) oo_sum
+            on o.master_id = oo_sum.master_id
+            and o.iso_year = oo_sum.iso_year
+            and o.week_index = oo_sum.week_index
+
+            where o.iso_year = %s
+            and o.week_index = %s
+            ''' % (request.user.id, pWeek_tuple[0], pWeek_tuple[1],)
+            )
+        else:
+            # 年・月の場合は目標値取得しない
+            # TODO クエリを分解して共通部分と分かれる部分にする
+            # num_obj_rev = NumberObjectiveMaster.objects.raw(
+            sql_str = '''
+                select m.id, m.name, m.number_kind, m.summary_kind, oo_sum.sumval, oo_sum.cnt
+                from objectives_numberobjectivemaster m
+                left outer join 
+                '''
+            sql_str2 = ""
+            if key[1:2] == "Y":
+                sql_str2 = '''
+                (
+                select master_id, year, sum(output_value) sumval, count(*) cnt
+                from objectives_numberobjectiveoutput
+                group by master_id, year
+                ) oo_sum
+                on m.id = oo_sum.master_id
+                and oo_sum.year = %s
+                where m.user_id = %s
+                ''' % (year, request.user.id)
+            elif key[1:2] == "M":
+                sql_str2 = '''
+                (
+                select master_id, year, month, sum(output_value) sumval, count(*) cnt
+                from objectives_numberobjectiveoutput
+                group by master_id, year, month
+                ) oo_sum
+                on m.id = oo_sum.master_id
+                and oo_sum.year = %s
+                and oo_sum.month = %s
+                where m.user_id = %s
+                ''' % (year, month, request.user.id)
+            num_obj_rev = NumberObjectiveMaster.objects.raw(sql_str + sql_str2)
+
     return render(request, 'objectives/objrev_form.html', {
         'input_unit': key[1:2],
         'input_kind': key[2:],
@@ -371,6 +431,7 @@ def display_objrev_form(request, key, target_date):
         'free_input_rev': free_input_rev,
         'target_period_str': target_period_str,
         'target_date_str': target_date_str,
+        'num_obj_rev': num_obj_rev,
     })
 
 def get_free_input_year(year, input_kind, user):
@@ -418,18 +479,6 @@ def get_free_input(input_unit, input_kind, year, month, date_index, week_tuple, 
         "D": get_free_input_date(year, date_index, input_kind, user),
     }
     return ret_dic[input_unit]
-
-    # # 日番号：年・月・週・日
-    # day_index_dic = {'Y':year,'M':month,'W':week_tuple[1],'D':date_index}
-    # # 年：isocalendarは第１木曜の含まれる週を第１週とする週単位となるため、年が実際の年と異なる場合アリ
-    # register_year = week_tuple[0] if input_unit=='W' else year
-    # return FreeInput.objects.filter(
-    #     input_unit=input_unit,
-    #     input_kind=input_kind,
-    #     year=register_year,
-    #     day_index=day_index_dic[input_unit],
-    #     user=user,
-    # )
 
 def get_date(target_date_str):
     '''対象日付の年、日付番号、isocalendarのtupleを返却する
