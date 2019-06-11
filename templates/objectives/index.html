@@ -155,8 +155,24 @@
                     removeLoading();
                 });
             }
+        });
+        $("#btn_left").on("click", function(){
+            var target_date = getCalculatedDateStr($('#datetimepicker').val(), -1);
+            window.location.href = "/objectives/display_date?target_date=" + target_date;    
+        });
+        $("#btn_right").on("click", function(){
+            var target_date = getCalculatedDateStr($('#datetimepicker').val(), 1);
+            window.location.href = "/objectives/display_date?target_date=" + target_date;    
         })
     });
+    function getCalculatedDateStr(target_date, calcDate) {
+        var year = target_date.substr(0,4);
+        var month = target_date.substr(5,2);
+        var date = target_date.substr(8,2);
+        var dt = new Date(year, month-1, date);
+        dt.setDate(dt.getDate() + calcDate);
+        return dt.getFullYear() + "-" + ("00" + (dt.getMonth()+1)).slice(-2) + "-" + ("00" + (dt.getDate())).slice(-2)
+    }
 </script>
 <!-- 目標・振返り作成状況によりメッセージ表示 -->
 {% for k,v in objRevFlgList.items %}
@@ -169,11 +185,13 @@
     {% endif %}
 {% endfor %}
 <div class="row">
-    <div class="col-12">
+    <div class="col-1 btn btn-success" id="btn_left">＜</div>
+    <div class="col-10">
         <input type="text" class="form-control datetimepicker-input"
                id="datetimepicker" data-toggle="datetimepicker"
                data-target="#datetimepicker"/>
     </div>
+    <div class="col-1 btn btn-success" id="btn_right">＞</div>
     <div class="col-6">
         <p>
             <i class="{{ objRevFlgList.TYO|get_checkbox }}"></i>
