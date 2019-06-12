@@ -19,6 +19,9 @@
 .pad-top-96 {
     padding-top: 96px;
   }
+.pad-top-56 {
+    padding-top: 56px;
+  }
 .nav-date {
     position: fixed;
     top: 56px;

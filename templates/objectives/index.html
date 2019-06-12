@@ -3,6 +3,8 @@
 {% load cmn_filter %}
 <script type="text/javascript">
     $(function () {
+        $("#block-content").removeClass("pad-top-56");
+        $("#block-content").addClass("pad-top-96");
         moment.locale('ja', {
             week: {
                 dow: 1
@@ -173,7 +175,16 @@
         dt.setDate(dt.getDate() + calcDate);
         return dt.getFullYear() + "-" + ("00" + (dt.getMonth()+1)).slice(-2) + "-" + ("00" + (dt.getDate())).slice(-2)
     }
-</script>  
+</script>
+<div class="row nav-date">
+    <div class="col-1 btn btn-success" id="btn_left">＜</div>
+    <div class="col-10">
+        <input type="text" class="form-control datetimepicker-input"
+                id="datetimepicker" data-toggle="datetimepicker"
+                data-target="#datetimepicker"/>
+    </div>
+    <div class="col-1 btn btn-success" id="btn_right">＞</div>
+</div>      
 <!-- 目標・振返り作成状況によりメッセージ表示 -->
 {% for k,v in objRevFlgList.items %}
     {% if k|obj_rev_msg_flg:v %}

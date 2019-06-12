@@ -24,7 +24,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/js/tempusdominus-bootstrap-4.min.js"></script>
     <link rel="stylesheet" href="{% static 'css/custom.css' %}">
 </head>
-<body class="pad-top-96">
+<body>
 <script type="text/javascript">
     $(function(){
         // 時刻・期間入力項目の入力制御(数値、コロンのみ)
@@ -104,7 +104,7 @@
 </script>
 <div class="container-fruid">
     {% include './_base_nav.html' %}
-    <div>
+    <div id="block-content" class="pad-top-56">
         {% block content %}{% endblock %}
     </div>
 </div>
