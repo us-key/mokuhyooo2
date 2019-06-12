@@ -9,10 +9,21 @@
     opacity: 0.8;
   }
    
-  #loading .loadingMsg {
+#loading .loadingMsg {
     display: table-cell;
     text-align: center;
     vertical-align: middle;
     padding-top: 140px;
     background: url("/static/img/gif-load.gif") center center no-repeat;
+  }
+.pad-top-96 {
+    padding-top: 96px;
+  }
+.nav-date {
+    position: fixed;
+    top: 56px;
+    left: 0px;
+    right: 0px;
+    z-index: 1000;
+    background-color: white;
   }

@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav id="nav" class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
     <a class="navbar-brand" href="{% url 'objectives:index' %}">mokuhyooo2</a>
     {% if not user.is_anonymous %}
     <button type="button" class="navbar-toggler"
@@ -25,3 +25,12 @@
     {% endif %}
     <!-- /.navbar-collapse -->
 </nav>
+<div class="row nav-date">
+    <div class="col-1 btn btn-success" id="btn_left">＜</div>
+    <div class="col-10">
+        <input type="text" class="form-control datetimepicker-input"
+                id="datetimepicker" data-toggle="datetimepicker"
+                data-target="#datetimepicker"/>
+    </div>
+    <div class="col-1 btn btn-success" id="btn_right">＞</div>
+</div>  

@@ -173,7 +173,7 @@
         dt.setDate(dt.getDate() + calcDate);
         return dt.getFullYear() + "-" + ("00" + (dt.getMonth()+1)).slice(-2) + "-" + ("00" + (dt.getDate())).slice(-2)
     }
-</script>
+</script>  
 <!-- 目標・振返り作成状況によりメッセージ表示 -->
 {% for k,v in objRevFlgList.items %}
     {% if k|obj_rev_msg_flg:v %}
@@ -185,13 +185,6 @@
     {% endif %}
 {% endfor %}
 <div class="row">
-    <div class="col-1 btn btn-success" id="btn_left">＜</div>
-    <div class="col-10">
-        <input type="text" class="form-control datetimepicker-input"
-               id="datetimepicker" data-toggle="datetimepicker"
-               data-target="#datetimepicker"/>
-    </div>
-    <div class="col-1 btn btn-success" id="btn_right">＞</div>
     <div class="col-6">
         <p>
             <i class="{{ objRevFlgList.TYO|get_checkbox }}"></i>
