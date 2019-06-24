@@ -59,6 +59,7 @@ class NumberObjectiveMaster(models.Model):
     ・集計種別：合計(S)、平均(A)
     ・有効フラグ：有効なもの：1、無効なもの：0(無効なものは週目標作成時には対象外になるが過去の実績は生かす)
     ・ユーザーID
+    ・ソート順
     '''
     name = models.CharField(
         max_length=100,
@@ -81,6 +82,7 @@ class NumberObjectiveMaster(models.Model):
         User,
         on_delete=models.CASCADE,
     )
+    order = models.PositiveSmallIntegerField()
 
 class NumberObjective(models.Model):
     '''数値目標：週単位での数値目標の値を設定
