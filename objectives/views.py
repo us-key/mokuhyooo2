@@ -226,7 +226,7 @@ def ajax_weekobj_create(request):
                 )
             # 更新
             else:
-                freeInput = get_free_input_week(week_tuple[0], week_tuple[1], request.user).first()
+                freeInput = get_free_input_week(week_tuple[0], week_tuple[1], "O", request.user).first()
                 freeInput.free_word = free_word
             freeInput.save()
         objectives = data["objectives"]
