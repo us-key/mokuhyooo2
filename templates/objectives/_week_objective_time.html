@@ -3,7 +3,8 @@
     <input with="time" 
            class="form-control wk_num_objective input_ti input_obj" 
            type="text"
-           id="OBJ_T_{{ master.id }}"/>
+           id="OBJ_T_{{ master.id }}"
+           value="{{ master.objective_value|num_to_time }}"/>
 </td>
 <td>
     {% if master.summary_kind == 'S' %}

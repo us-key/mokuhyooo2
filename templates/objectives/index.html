@@ -226,11 +226,11 @@
     <div class="col-12">
         <div class="form-group objective-review-group">
             <label>今週の目標 
-                <a id="W_O_link_{{ weekFreeObjective.id|default_if_none:'' }}" href="{% url 'objectives:ajax_freeword_register' %}" class="fw_post">
-                    <i class="fas fa-upload"></i>
+                <a href="{% url 'objectives:week_objective_edit' display_date %}">
+                    <i class="fas fa-edit"></i>
                 </a>
             </label>
-            <textarea class='form-control objective-review-input' rows='6'>{{ weekFreeObjective.free_word|default_if_none:"" }}</textarea>
+            <textarea class='form-control objective-review-input' rows='6' readonly>{{ weekFreeObjective.free_word|default_if_none:"" }}</textarea>
         </div>
         <p>
         </p>

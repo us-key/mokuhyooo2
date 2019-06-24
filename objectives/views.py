@@ -213,26 +213,80 @@ def ajax_weekobj_create(request):
         year, month, date_index, week_tuple = get_date(target_date)
         print(free_word)
         if (free_word != ''):
-            freeInput = FreeInput(
-                input_unit = 'W',
-                input_kind = 'O',
-                year = week_tuple[0],
-                day_index = week_tuple[1],
-                free_word = free_word,
-                input_status = 1,
-                user = request.user,
-            )
+            # 新規作成
+            if data["mode"] == "C":
+                freeInput = FreeInput(
+                    input_unit = 'W',
+                    input_kind = 'O',
+                    year = week_tuple[0],
+                    day_index = week_tuple[1],
+                    free_word = free_word,
+                    input_status = 1,
+                    user = request.user,
+                )
+            # 更新
+            else:
+                freeInput = FreeInput.objects.filter(
+                    input_unit = 'W',
+                    input_kind = 'O',
+                    year = week_tuple[0],
+                    day_index = week_tuple[1],
+                    user = request.user,
+                ).first()
+                freeInput.free_word = free_word
             freeInput.save()
         objectives = data["objectives"]
         print(objectives)
-        for obj in objectives:
-            numberObjective = NumberObjective(
-                master = NumberObjectiveMaster.objects.get(id=int(obj["master_id"])),
-                iso_year = week_tuple[0],
-                week_index = week_tuple[1],
-                objective_value = int(obj["value"]),
+        # 新規作成
+        if data["mode"] == "C":
+            for obj in objectives:
+                numberObjective = NumberObjective(
+                    master = NumberObjectiveMaster.objects.get(id=int(obj["master_id"])),
+                    iso_year = week_tuple[0],
+                    week_index = week_tuple[1],
+                    objective_value = int(obj["value"]),
+                )
+                numberObjective.save()
+        # 更新
+        else:
+            # 数値目標マスタを全件取得の上、登録値あり＆入力値あり：更新、登録値あり＆入力値なし：削除
+            # 登録値なし＆入力値あり：登録、登録値なし＆入力値なし：なにもしない
+            master = NumberObjectiveMaster.objects.filter(
+                valid_flag = "1",
+                user = request.user,
             )
-            numberObjective.save()
+            for m in master:
+                # 数値目標登録値の有無確認
+                numberObjective = NumberObjective.objects.filter(
+                    master = m,
+                    iso_year = week_tuple[0],
+                    week_index = week_tuple[1],
+                ).first()
+                # 登録あり
+                if numberObjective:
+                    flg = False
+                    for obj in objectives:
+                        # 入力値あり:値更新
+                        if m.id == int(obj["master_id"]):
+                            numberObjective.objective_value = int(obj["value"])
+                            numberObjective.save()
+                            flg = True
+                    # 入力値なし:削除
+                    if not flg:
+                        numberObjective.delete()
+                # 登録なし
+                else:
+                    for obj in objectives:
+                        # 入力値あり:値登録
+                        if m.id == int(obj["master_id"]):
+                            numberObjective = NumberObjective(
+                                master = m,
+                                iso_year = week_tuple[0],
+                                week_index = week_tuple[1],
+                                objective_value = int(obj["value"])
+                            )
+                            numberObjective.save()
+                        # 入力値なし:何もしない
     return JsonResponse({"target_date":target_date})
 
 @login_required
@@ -277,7 +331,6 @@ def display_week_objective_form(request, datestr):
     end_date_str = end_date.strftime("%Y-%m-%d")
     # 1週前の実績取得：7日前の日付を元に取得
     year, month, date_index, week_tuple = get_date(get_date_str_diff(datestr, -7))
-    #numberObjectiveMaster = NumberObjectiveMaster.objects.filter(user=request.user, valid_flag="1")
     numObj = NumberObjectiveMaster.objects.raw(
         '''
         select m.*, o_sum.sumval, o_sum.cnt
@@ -300,7 +353,48 @@ def display_week_objective_form(request, datestr):
         'start_date_str': start_date_str,
         'end_date_str': end_date_str,
         'masters': numObj,
+        'mode': 'C',
     })
+
+@login_required
+def display_week_objective_form_edit(request, datestr):
+    '''週の目標設定画面表示(編集)'''
+    start_date, end_date = get_week_start_and_end(datestr)
+    start_date_str = start_date.strftime("%Y-%m-%d")
+    end_date_str = end_date.strftime("%Y-%m-%d")
+    # 1週前の実績取得：7日前の日付を元に取得
+    # 設定済みの目標値取得
+    year, month, date_index, week_tuple = get_date(datestr)
+    pYear, pMonth, pDate_index, pWeek_tuple = get_date(get_date_str_diff(datestr, -7))
+    numObj = NumberObjectiveMaster.objects.raw(
+        '''
+        select m.*, o.objective_value, o_sum.sumval, o_sum.cnt
+        from objectives_numberobjectivemaster m
+        left outer join objectives_numberobjective o
+        on m.id = o.master_id
+        and o.iso_year = %s
+        and o.week_index = %s
+        left outer join 
+        (
+            select master_id, iso_year, week_index, sum(output_value) sumval, count(*) cnt
+            from objectives_numberobjectiveoutput
+            group by master_id, iso_year, week_index
+        ) o_sum
+        on m.id = o_sum.master_id
+        and o_sum.iso_year = %s
+        and o_sum.week_index = %s
+        where m.user_id = %s
+        and   m.valid_flag = '1'
+        ''' % (week_tuple[0], week_tuple[1], pWeek_tuple[0], pWeek_tuple[1], request.user.id)
+    )
+
+    return render(request, 'objectives/week_objective_form.html', {
+        'start_date_str': start_date_str,
+        'end_date_str': end_date_str,
+        'masters': numObj,
+        'mode': 'U',
+    })
+
 
 @login_required
 def display_objrev_form(request, key, target_date):

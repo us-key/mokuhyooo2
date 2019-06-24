@@ -18,7 +18,7 @@ def percentie(value, args):
 
 @register.filter
 def num_to_time(value):
-    if value is None:
+    if value is None or value == "":
         return ""
     # 時:分に変換
     return str(value // 60) + ":" + ("00" + str(value % 60))[-2:]

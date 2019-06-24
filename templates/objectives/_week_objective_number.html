@@ -2,7 +2,8 @@
 <td>
     <input class="form-control wk_num_objective input_num input_obj" 
            type="number"
-           id="OBJ_N_{{ master.id }}"/>
+           id="OBJ_N_{{ master.id }}"
+           value="{{ master.objective_value|default_if_none:0 }}"/>
 </td>
 <td>
     {% if master.summary_kind == 'S' %}

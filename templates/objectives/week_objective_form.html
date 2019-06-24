@@ -3,7 +3,7 @@
 <script type="text/javascript">
     $(function(){
         // 入力値を投げる
-        $("#wk_obj_submit").on("click", function(e){
+        $(".wk_obj_submit").on("click", function(e){
             e.preventDefault();
             var path = location.pathname;
             var target_date = path.split("/")[4];
@@ -50,7 +50,8 @@
                     data: JSON.stringify({
                         "target_date": target_date,
                         "free_word": free_word,
-                        "objectives": objectives
+                        "objectives": objectives,
+                        "mode": $(this).attr("id")
                     }),
                     timeout: 10000,
                 })
@@ -119,6 +120,6 @@
 </div>
 
 <div class="row">
-    <input id="wk_obj_submit" type="submit" class="btn btn-primary" value="登録"/>
+    <input id="{{mode}}" type="submit" class="btn btn-primary wk_obj_submit" value="登録"/>
 </div>
 {% endblock %}
