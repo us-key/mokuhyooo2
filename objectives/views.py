@@ -226,13 +226,7 @@ def ajax_weekobj_create(request):
                 )
             # 更新
             else:
-                freeInput = FreeInput.objects.filter(
-                    input_unit = 'W',
-                    input_kind = 'O',
-                    year = week_tuple[0],
-                    day_index = week_tuple[1],
-                    user = request.user,
-                ).first()
+                freeInput = get_free_input_week(week_tuple[0], week_tuple[1], request.user).first()
                 freeInput.free_word = free_word
             freeInput.save()
         objectives = data["objectives"]
@@ -362,6 +356,7 @@ def display_week_objective_form_edit(request, datestr):
     start_date, end_date = get_week_start_and_end(datestr)
     start_date_str = start_date.strftime("%Y-%m-%d")
     end_date_str = end_date.strftime("%Y-%m-%d")
+
     # 1週前の実績取得：7日前の日付を元に取得
     # 設定済みの目標値取得
     year, month, date_index, week_tuple = get_date(datestr)
@@ -388,9 +383,13 @@ def display_week_objective_form_edit(request, datestr):
         ''' % (week_tuple[0], week_tuple[1], pWeek_tuple[0], pWeek_tuple[1], request.user.id)
     )
 
+    # 自由入力
+    freeInput = get_free_input_week(week_tuple[0], week_tuple[1], "O", request.user).first()
+
     return render(request, 'objectives/week_objective_form.html', {
         'start_date_str': start_date_str,
         'end_date_str': end_date_str,
+        'free_input': freeInput,
         'masters': numObj,
         'mode': 'U',
     })
