@@ -6,7 +6,7 @@ class NumberObjectiveMasterForm(forms.ModelForm):
     '''数値目標マスターフォーム'''
     class Meta:
         model = NumberObjectiveMaster
-        fields = ('name', 'number_kind', 'summary_kind')
+        fields = ('name', 'number_kind', 'summary_kind', 'order_index')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

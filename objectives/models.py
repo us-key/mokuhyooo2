@@ -82,7 +82,9 @@ class NumberObjectiveMaster(models.Model):
         User,
         on_delete=models.CASCADE,
     )
-    order = models.PositiveSmallIntegerField()
+    order_index = models.PositiveSmallIntegerField(
+        verbose_name='表示順',
+    )
 
 class NumberObjective(models.Model):
     '''数値目標：週単位での数値目標の値を設定

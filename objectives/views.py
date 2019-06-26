@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.http.response import JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic import ListView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 
 from datetime import datetime,date,timedelta
 
@@ -22,10 +22,22 @@ class NumberObjectiveMasterListView(LoginRequiredMixin, ListView):
     model = NumberObjectiveMaster
 
     def get_queryset(self):
-        return NumberObjectiveMaster.objects.filter(user=self.request.user)
+        return NumberObjectiveMaster.objects.filter(user=self.request.user).order_by('order_index')
 
 class NumberObjectiveMasterCreateView(LoginRequiredMixin, CreateView):
     '''数値目標マスタ作成画面'''
+    template_name = "numberobjectivemaster/create.html"
+    form_class = NumberObjectiveMasterForm
+    success_url = reverse_lazy('objectives:master_list')
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        form.instance.valid_flag = "1"
+        return super().form_valid(form)
+
+class NumberObjectiveMasterUpdateView(LoginRequiredMixin, UpdateView):
+    '''数値目標マスタ更新画面'''
+    model = NumberObjectiveMaster
     template_name = "numberobjectivemaster/create.html"
     form_class = NumberObjectiveMasterForm
     success_url = reverse_lazy('objectives:master_list')
@@ -112,6 +124,7 @@ def get_date_data(request, display_date):
 
         where o.iso_year = %s
         and o.week_index = %s
+        order by m.order_index
         ''' % (request.user.id, date_index, week_tuple[0], week_tuple[1])
     )
     print(list(numberObjective))
@@ -318,6 +331,21 @@ def ajax_dateoutput_create(request):
     return JsonResponse({"target_date":target_date})
 
 @login_required
+def ajax_numobjmst_order_update(request):
+    '''ajaxで送信されたデータを元にマスタのソート順を更新する'''
+    print("*****[#ajax_numobjmst_order_update]start*****")
+    data = json.loads(request.body)
+    print(data)
+    orders = data["data"]
+    for k,v in orders.items():
+        numobjmst = NumberObjectiveMaster.objects.get(id=int(k))
+        numobjmst.order_index = int(v)
+        numobjmst.save()
+    return JsonResponse({"msg": "ソート順を更新しました。"})
+
+
+
+@login_required
 def display_week_objective_form(request, datestr):
     '''週の目標設定画面表示'''
     start_date, end_date = get_week_start_and_end(datestr)
@@ -340,6 +368,7 @@ def display_week_objective_form(request, datestr):
         and o_sum.week_index = %s
         where m.user_id = %s
         and   m.valid_flag = '1'
+        order by m.order_index
         ''' % (week_tuple[0], week_tuple[1], request.user.id)
     )
 
@@ -380,6 +409,7 @@ def display_week_objective_form_edit(request, datestr):
         and o_sum.week_index = %s
         where m.user_id = %s
         and   m.valid_flag = '1'
+        order by m.order_index
         ''' % (week_tuple[0], week_tuple[1], pWeek_tuple[0], pWeek_tuple[1], request.user.id)
     )
 
@@ -480,6 +510,7 @@ def display_objrev_form(request, key, target_date):
 
             where o.iso_year = %s
             and o.week_index = %s
+            order by m.order_index
             ''' % (request.user.id, pWeek_tuple[0], pWeek_tuple[1],)
             )
         else:
@@ -502,6 +533,7 @@ def display_objrev_form(request, key, target_date):
                 on m.id = oo_sum.master_id
                 and oo_sum.year = %s
                 where m.user_id = %s
+                order by m.order_index
                 ''' % (year, request.user.id)
             elif key[1:2] == "M":
                 sql_str2 = '''
@@ -514,6 +546,7 @@ def display_objrev_form(request, key, target_date):
                 and oo_sum.year = %s
                 and oo_sum.month = %s
                 where m.user_id = %s
+                order by m.order_index
                 ''' % (year, month, request.user.id)
             num_obj_rev = NumberObjectiveMaster.objects.raw(sql_str + sql_str2)
 

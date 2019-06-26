@@ -1,6 +1,37 @@
 {% extends "_base.html" %}
 {% load get_dic_vals %}
 {% block content %}
+<script type="text/javascript">
+    $(function(){
+        $("#orderUpd").on("click", function(e){
+            e.preventDefault(e);
+            // 処理前に Loading 画像を表示
+            dispLoading("処理中...");
+            var arr = {};
+            $(".order").each(function(i, d){
+                arr[$(d).attr("id")] = $(d).children("input").val();
+            })
+            $.ajax({
+                url: "{% url 'objectives:ajax_numobjmst_update' %}",
+                method: "POST",
+                headers: { "X-CSRFToken": '{{csrf_token}}' },
+                data: JSON.stringify({
+                    "data": arr,
+                    "user": {{ user.id }}
+                }),
+                timeout: 10000,
+                datatype: "json",
+            })
+            .done(function(json){
+                alert(json.msg);
+                location.reload();
+            })
+            .always(function(){
+                removeLoading();
+            })
+        })
+    })
+</script>
 <a class="btn btn-dark" href="{% url 'objectives:master_create' %}">マスタ追加</a>
 <table class="table table-hover">
     <thead>
@@ -8,15 +39,17 @@
             <th>名称</th>
             <th>数値種別</th>
             <th>集計種別</th>
+            <th>ソート順 <a id="orderUpd" href=""><i class="fas fa-edit"></i></a></th>
         </tr>
     </thead>
     <tbody>
         {% for item in object_list %}
         <tr>
-            <td>{{ item.name }}</td>
+            <td><a href="{% url 'objectives:master_update' item.id %}">{{ item.name }}</a></td>
             <!-- TODO カスタムフィルタで辞書オブジェクトから値変換して区分値を表示させる -->
             <td>{{ item.number_kind|number_kind_choices }}</td>
             <td>{{ item.summary_kind|summary_kind }}</td>
+            <td class="order" id="{{ item.id }}"><input class="form-control" value="{{ item.order_index }}"/></td>
         </tr>
         {% empty %}
         <tr>
