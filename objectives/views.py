@@ -8,6 +8,7 @@ from django.http.response import JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView, UpdateView
+from django.db.models import Max
 
 from datetime import datetime,date,timedelta
 
@@ -33,6 +34,12 @@ class NumberObjectiveMasterCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user
         form.instance.valid_flag = "1"
+        # ソート順は登録済みレコードのmax+1を登録する
+        max = NumberObjectiveMaster.objects.filter(
+            user=self.request.user,
+            valid_flag="1",
+            ).aggregate(Max("order_index"))
+        form.instance.order_index = max["order_index__max"]+1
         return super().form_valid(form)
 
 class NumberObjectiveMasterUpdateView(LoginRequiredMixin, UpdateView):
