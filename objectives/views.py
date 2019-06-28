@@ -314,27 +314,51 @@ def ajax_dateoutput_create(request):
         year, month, date_index, week_tuple = get_date(target_date)
         outputs = data["outputs"]
         print(outputs)
-        for obj in outputs:
-            # TODO 登録と更新の場合分け
-            if obj["id"] != "":
-                # 更新
-                numberObjectiveOutput = NumberObjectiveOutput.objects.get(id=int(obj["id"]))
-                numberObjectiveOutput.output_value = int(obj["value"])
-                numberObjectiveOutput.save()
-            else:
-                master = NumberObjectiveMaster.objects.get(id=int(obj["master_id"]))
-                # TODO エラーハンドリング
-                if master:
-                    numberObjectiveOutput = NumberObjectiveOutput(
-                        master = master,
-                        year = year,
-                        month = month,
-                        iso_year = week_tuple[0],
-                        week_index = week_tuple[1],
-                        date_index = date_index,
-                        output_value = int(obj["value"]),
-                    )
-                    numberObjectiveOutput.save()
+        # 週目標を全て取得し、入力値の有無で場合分け
+        # 週目標あり＆入力値あり：登録or更新、週目標あり＆入力値なし：何もしないor削除
+        
+        # 週の数値目標を取得
+        numObj = NumberObjective.objects.filter(
+            master__user = request.user,
+            iso_year = week_tuple[0],
+            week_index = week_tuple[1],
+        )
+        for no in numObj:
+            flg = False            
+            for obj in outputs:
+                # 週目標あり＆入力値あり
+                if no.master.id == int(obj["master_id"]):
+                    # TODO 登録と更新の場合分け
+                    if obj["id"] != "":
+                        # 更新
+                        numberObjectiveOutput = NumberObjectiveOutput.objects.get(id=int(obj["id"]))
+                        numberObjectiveOutput.output_value = int(obj["value"])
+                        numberObjectiveOutput.save()
+                    else:
+                        master = NumberObjectiveMaster.objects.get(id=no.master.id)
+                        # 登録
+                        if master:
+                            numberObjectiveOutput = NumberObjectiveOutput(
+                                master = master,
+                                year = year,
+                                month = month,
+                                iso_year = week_tuple[0],
+                                week_index = week_tuple[1],
+                                date_index = date_index,
+                                output_value = int(obj["value"]),
+                            )
+                            numberObjectiveOutput.save()
+                    # フラグを立てる
+                    flg = True
+            if not flg:
+                # 入力値なし：削除
+                numObjOut = NumberObjectiveOutput.objects.filter(
+                    master = no.master,
+                    iso_year = week_tuple[0],
+                    week_index = week_tuple[1],
+                ).first()
+                if numObjOut:
+                    numObjOut.delete()
     return JsonResponse({"target_date":target_date})
 
 @login_required
