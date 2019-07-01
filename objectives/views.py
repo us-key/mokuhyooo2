@@ -354,8 +354,11 @@ def ajax_dateoutput_create(request):
                 # 入力値なし：削除
                 numObjOut = NumberObjectiveOutput.objects.filter(
                     master = no.master,
+                    year = year,
+                    month = month,
                     iso_year = week_tuple[0],
                     week_index = week_tuple[1],
+                    date_index = date_index,
                 ).first()
                 if numObjOut:
                     numObjOut.delete()
