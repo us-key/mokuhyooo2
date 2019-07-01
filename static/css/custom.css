@@ -30,3 +30,6 @@
     z-index: 1000;
     background-color: white;
   }
+.tooltip-inner {
+  max-width: 90vw;
+}
