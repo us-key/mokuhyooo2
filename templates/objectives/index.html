@@ -5,13 +5,10 @@
     $(function () {
         $("#block-content").removeClass("pad-top-56");
         $("#block-content").addClass("pad-top-96");
-        moment.locale('ja', {
-            week: {
-                dow: 1
-            }
-        });
         $('#datetimepicker').datetimepicker({
-            locale: 'ja',
+            locale: moment.locale('ja', {
+                week: { dow: 1 }
+            }),
             dayViewHeaderFormat: 'YYYY年 M月',
             format: 'YYYY-MM-DD'
         });
@@ -175,6 +172,12 @@
         dt.setDate(dt.getDate() + calcDate);
         return dt.getFullYear() + "-" + ("00" + (dt.getMonth()+1)).slice(-2) + "-" + ("00" + (dt.getDate())).slice(-2)
     }
+    // 戻るボタンで遷移した際に強制的にリロードする(datetimepickerの表示を正しくするため)
+    window.onload = function(){
+        if ($('#datetimepicker').val().split("-").length == 1) {
+            window.location.reload();
+        }
+    } 
 </script>
 <div class="row nav-date">
     <div class="col-1 btn btn-success" id="btn_left">＜</div>
