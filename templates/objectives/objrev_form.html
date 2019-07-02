@@ -59,14 +59,16 @@
     <div class="col-12">
         <div>目標</div>
         <div class="form-group objective-review-group">
-            <textarea class='form-control obj' rows='6'>{{ free_input_obj.free_word|default_if_none:"" }}</textarea>
+            <textarea class='form-control obj' rows='6' data-toggle="tooltip"
+                      title="{{ free_input_obj.free_word|default_if_none:'' }}">{{ free_input_obj.free_word|default_if_none:"" }}</textarea>
         </div>
     </div>
     {% if input_kind == "R" %}
     <div class="col-12">
         <div>振返り</div>
         <div class="form-group objective-review-group">
-            <textarea class='form-control rev' rows='6'>{{ free_input_rev.free_word|default_if_none:"" }}</textarea>
+            <textarea class='form-control rev' rows='6' data-toggle="tooltip"
+                      title="{{ free_input_rev.free_word|default_if_none:'' }}">{{ free_input_rev.free_word|default_if_none:"" }}</textarea>
         </div>
     </div>
     {% endif %}
