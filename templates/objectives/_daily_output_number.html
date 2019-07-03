@@ -5,8 +5,8 @@
 <td>
     <input class="form-control d_num_objective input_num input_obj" 
             type="number"
-            id="O_N_{{ numObj.id }}"
-            value="{{ numObj.output_value }}" />
+            id="O_N_{{ numObj.id|default_if_none:'' }}"
+            value="{{ numObj.output_value|default_if_none:'' }}" />
 </td>
 <!-- 合計or平均 / パーセンテージ -->
 <!-- 割り算は組み込みフィルター -->

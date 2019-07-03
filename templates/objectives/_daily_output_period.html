@@ -5,7 +5,7 @@
 <td>
     <input class="form-control d_num_objective input_pe input_obj" 
             type="text"
-            id="O_P_{{ numObj.id }}"
+            id="O_P_{{ numObj.id|default_if_none:'' }}"
             value="{{ numObj.output_value|num_to_time }}" />
 </td>
 <!-- 合計or平均 / パーセンテージ -->
