@@ -12,7 +12,7 @@
 <!-- 割り算は組み込みフィルター -->
 <td>
     {% if numObj.summary_kind == 'S' %}
-    {{ numObj.sumval|num_to_time }}
+    {{ numObj.sumval|default_if_none:0|num_to_time }}
     /
     {{ numObj.sumval|percentie:numObj.objective_value }} %
     {% elif numObj.summary_kind == 'A' %}
