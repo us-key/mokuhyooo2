@@ -174,7 +174,7 @@
     }
     // 戻るボタンで遷移した際に強制的にリロードする(datetimepickerの表示を正しくするため)
     window.onload = function(){
-        if ($('#datetimepicker').val().split("-").length == 1) {
+        if ($('#datetimepicker').val() != "" && $('#datetimepicker').val().split("-").length == 1) {
             window.location.reload();
         }
     } 
