@@ -524,6 +524,8 @@ def display_objrev_form(request, key, target_date):
     if key[2:] == "R":
         # 週
         # 目標名、目標値、合計値、件数
+        get_numobj_summary(key[1:2], request.user, target_date)
+        
         if key[1:2] == "W":
             num_obj_rev = NumberObjectiveMaster.objects.raw(
             '''
@@ -593,6 +595,127 @@ def display_objrev_form(request, key, target_date):
         'target_date_str': target_date_str,
         'num_obj_rev': num_obj_rev,
     })
+
+def get_numobj_summary(input_unit, user, target_date):
+    '''振り返り画面で表示する数値目標実績集計値を取得する
+       週：週目標に対して週の集計値、日ごとの実績を取得
+       月：数値目標マスタに対して月の集計値、曜日ごとの実績を取得
+       年：数値目標マスタに対して年の集計値、月ごとの実績を取得
+       形式：
+       {
+            sum_header: ["集計","1月","2月",...],
+            num_obj_rev:[
+                {"id":1,"name":"xxx","number_kind":"N","summary_kind":"S", ※週の場合のみ目標値取得
+                    "sum_dic_list":[
+                        {"header":"集計","val":123,"cnt":10}, ※cntは平均値算出用 
+                        {"header":"1月","val":10,"cnt":3},
+                        ...
+                    ]
+                }
+            ]
+       }
+    '''
+    sum_header = get_sum_header(input_unit, target_date)
+    ret_dic = {}
+    num_obj_rev_list = []
+    ret_dic.update({
+        "sum_header": sum_header,
+        "num_obj_rev": num_obj_rev_list,
+    })
+    print("ret_dic: " + str(ret_dic))
+    if input_unit == "W":
+        year, month, date_index, week_tuple = get_date(target_date)
+        # 最初に集計レコード作成
+        # 数値目標ごとの集計値
+        num_obj_rev_qry = NumberObjectiveMaster.objects.raw(
+        '''
+        select m.id, m.name, m.number_kind, m.summary_kind, o.objective_value, oo_sum.sumval, oo_sum.cnt
+        from objectives_numberobjectivemaster m
+        left join objectives_numberobjective o
+        on m.id = o.master_id
+        and m.user_id = %s
+        left outer join 
+        (
+            select master_id, iso_year, week_index, sum(output_value) sumval, count(*) cnt
+            from objectives_numberobjectiveoutput
+            group by master_id, iso_year, week_index
+        ) oo_sum
+        on o.master_id = oo_sum.master_id
+        and o.iso_year = oo_sum.iso_year
+        and o.week_index = oo_sum.week_index
+
+        where o.iso_year = %s
+        and o.week_index = %s
+        order by m.order_index
+        ''' % (user.id, week_tuple[0], week_tuple[1],)
+        )
+        for nor in num_obj_rev_qry:
+            num_obj_rev_list.append({
+                "id": nor.id,
+                "name": nor.name,
+                "number_kind": nor.number_kind,
+                "summary_kind": nor.summary_kind,
+                "objective_value": nor.objective_value,
+                # 集計値リスト：総集計のみlistにセットしておく
+                "sum_dic_list":[{
+                    "header":"集計",
+                    "val":nor.sumval,
+                    "cnt":nor.cnt,
+                }]
+            })
+        print("ret_dic: " + str(ret_dic))
+        
+        # 日付ごとのレコード作成
+        # 週の開始日、終了日取得
+        start_date, end_date = get_week_start_and_end(target_date)
+        work_date = start_date
+        while work_date <= end_date:
+            work_date_str = work_date.strftime("%Y-%m-%d")
+            year, month, date_index, week_tuple = get_date(work_date_str)
+            # 日付ごとの実績を取る
+            num_obj_out = NumberObjectiveOutput.objects.filter(
+                year=year,
+                date_index=date_index,
+                master__user=user,
+            )
+            if num_obj_out:
+                for noo in num_obj_out:
+                    for nor in num_obj_rev_list:
+                        # 一致するマスタのレコードに対して対象日付のレコードを追加する
+                        if nor["id"] == noo.master.id:
+                            nor["sum_dic_list"].append({
+                                "header": work_date.strftime("%m/%d"),
+                                "val": noo.output_value,
+                                "cnt": 1,
+                            })
+            work_date = work_date + timedelta(days=1)
+    elif input_unit == "M":
+        pass
+    elif input_unit == "Y":
+        pass
+    print("ret_dic: " + str(ret_dic))
+
+def get_sum_header(input_unit, target_date): 
+    ''' 単位ごとに一覧表示のヘッダをリスト形式で返却する
+        例:["集計","1月","2月",...] '''
+    ret_list = ["集計"]
+    if input_unit == "W":
+        start_date, end_date = get_week_start_and_end(target_date)
+        work_date = start_date
+        while work_date <= end_date:
+            ret_list.append(work_date.strftime("%m/%d"))
+            work_date = work_date + timedelta(days=1)
+    elif input_unit == "M":
+        ret_list.extend(["月","火","水","木","金","土","日"])
+    elif input_unit == "Y":
+        work_month = 1
+        while work_month <= 12:
+            ret_list.append("%s月" % work_month)
+            work_month = work_month + 1
+    return ret_list
+
+        
+
 
 def get_free_input_year(year, input_kind, user):
     return FreeInput.objects.filter(
