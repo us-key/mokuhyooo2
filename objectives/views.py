@@ -345,6 +345,7 @@ def ajax_dateoutput_create(request):
                                 iso_year = week_tuple[0],
                                 week_index = week_tuple[1],
                                 date_index = date_index,
+                                day_of_week = week_tuple[2],
                                 output_value = int(obj["value"]),
                             )
                             numberObjectiveOutput.save()
@@ -622,9 +623,8 @@ def get_numobj_summary(input_unit, user, target_date):
         "sum_header": sum_header,
         "num_obj_rev": num_obj_rev_list,
     })
-    print("ret_dic: " + str(ret_dic))
+    year, month, date_index, week_tuple = get_date(target_date)
     if input_unit == "W":
-        year, month, date_index, week_tuple = get_date(target_date)
         # 最初に集計レコード作成
         # 数値目標ごとの集計値
         num_obj_rev_qry = NumberObjectiveMaster.objects.raw(
@@ -657,13 +657,12 @@ def get_numobj_summary(input_unit, user, target_date):
                 "summary_kind": nor.summary_kind,
                 "objective_value": nor.objective_value,
                 # 集計値リスト：総集計のみlistにセットしておく
-                "sum_dic_list":[{
-                    "header":"集計",
-                    "val":nor.sumval,
-                    "cnt":nor.cnt,
+                "sum_dic_list": [{
+                    "header": "集計",
+                    "val": nor.sumval,
+                    "cnt": nor.cnt,
                 }]
             })
-        print("ret_dic: " + str(ret_dic))
         
         # 日付ごとのレコード作成
         # 週の開始日、終了日取得
@@ -690,10 +689,66 @@ def get_numobj_summary(input_unit, user, target_date):
                             })
             work_date = work_date + timedelta(days=1)
     elif input_unit == "M":
+        # 集計レコード
+        num_obj_rev_qry = NumberObjectiveMaster.objects.raw(
+        '''
+        select m.id, m.name, m.number_kind, m.summary_kind, oo_sum.sumval, oo_sum.cnt
+        from objectives_numberobjectivemaster m
+        left outer join 
+        (
+        select master_id, year, month, sum(output_value) sumval, count(*) cnt
+        from objectives_numberobjectiveoutput
+        group by master_id, year, month
+        ) oo_sum
+        on m.id = oo_sum.master_id
+        and oo_sum.year = %s
+        and oo_sum.month = %s
+        where m.user_id = %s
+        order by m.order_index
+        ''' % (year, month, user.id)
+        )
+        for nor in num_obj_rev_qry:
+            num_obj_rev_list.append({
+                "id": nor.id,
+                "name": nor.name,
+                "number_kind": nor.number_kind,
+                "summary_kind": nor.summary_kind,
+                # 集計値リスト：総集計のみlistにセットしておく
+                "sum_dic_list": [{
+                    "header": "集計",
+                    "val": nor.sumval,
+                    "cnt": nor.cnt,
+                }]
+            })
+        
+        # 曜日ごとのレコード作成　
+        # target_dateからdate_indexとisocalendarの曜日の関係を確認
+        # 曜日番号 = (date_index % 7) + x ⇒ x = 曜日番号 - (date_index % 7) (-5~7)
+        di_work = date_index % 7
+        diff_numofweek = week_tuple[2] - di_work
+        # →曜日番号はこの値にdateindexを7で割った値を足した値になる
+        numofweek_dic = {"1":"月","2":"火","3":"水","4":"木","5":"金","6":"土","7":"日"}
+        for idx in range(1, 8):
+            # 曜日ごとの実績をとる
+            num_obj_out = NumberObjectiveOutput.objects.raw(
+            '''
+            select o.master_id id, sum(output_value) sumval, count(*) cnt
+            from objectives_numberobjectiveoutput o
+            left join objectives_numberobjectivemaster m
+            on o.master_id = m.id
+            where m.user_id = %s
+            and o.date_index % 7 = %s
+            group by o.id
+            ''' % (user.id, (idx-diff_numofweek) % 7)
+            )
+            
+
+
         pass
     elif input_unit == "Y":
         pass
     print("ret_dic: " + str(ret_dic))
+    return ret_dic
 
 def get_sum_header(input_unit, target_date): 
     ''' 単位ごとに一覧表示のヘッダをリスト形式で返却する

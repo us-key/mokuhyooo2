@@ -99,7 +99,7 @@ class NumberObjective(models.Model):
     )
     iso_year = models.PositiveSmallIntegerField()
     week_index = models.PositiveSmallIntegerField()
-    objective_value = models.PositiveSmallIntegerField()
+    objective_value = models.PositiveIntegerField()
 
 class NumberObjectiveOutput(models.Model):
     '''数値目標実績：日毎の数値目標実績を登録
@@ -120,4 +120,5 @@ class NumberObjectiveOutput(models.Model):
     iso_year = models.PositiveSmallIntegerField()
     week_index = models.PositiveSmallIntegerField()
     date_index = models.PositiveSmallIntegerField()
-    output_value = models.PositiveSmallIntegerField()
+    day_of_week = models.PositiveSmallIntegerField()
+    output_value = models.PositiveIntegerField()
