@@ -722,29 +722,36 @@ def get_numobj_summary(input_unit, user, target_date):
             })
         
         # 曜日ごとのレコード作成　
-        # target_dateからdate_indexとisocalendarの曜日の関係を確認
-        # 曜日番号 = (date_index % 7) + x ⇒ x = 曜日番号 - (date_index % 7) (-5~7)
-        di_work = date_index % 7
-        diff_numofweek = week_tuple[2] - di_work
-        # →曜日番号はこの値にdateindexを7で割った値を足した値になる
-        numofweek_dic = {"1":"月","2":"火","3":"水","4":"木","5":"金","6":"土","7":"日"}
-        for idx in range(1, 8):
-            # 曜日ごとの実績をとる
-            num_obj_out = NumberObjectiveOutput.objects.raw(
-            '''
-            select o.master_id id, sum(output_value) sumval, count(*) cnt
-            from objectives_numberobjectiveoutput o
-            left join objectives_numberobjectivemaster m
-            on o.master_id = m.id
-            where m.user_id = %s
-            and o.date_index % 7 = %s
-            group by o.id
-            ''' % (user.id, (idx-diff_numofweek) % 7)
-            )
-            
-
-
-        pass
+        numofweek_dic = {1:"月",2:"火",3:"水",4:"木",5:"金",6:"土",7:"日"}
+        # 曜日ごとの実績の集計をとる
+        num_obj_out = NumberObjectiveOutput.objects.raw(
+        '''
+        select m.id, oo_sum.day_of_week, oo_sum.sumval, oo_sum.cnt
+        from objectives_numberobjectivemaster m
+        left outer join
+        (
+            select master_id, day_of_week, sum(output_value) sumval, count(*) cnt
+            from objectives_numberobjectiveoutput
+            where year = %s
+            and   month = %s
+            group by master_id, day_of_week
+        ) oo_sum
+        on m.id = oo_sum.master_id
+        where m.user_id = %s
+        and   oo_sum.cnt > 0
+        order by m.order_index, oo_sum.day_of_week
+        ''' % (year, month, user.id)
+        )
+        if num_obj_out:
+            for noo in num_obj_out:
+                for nor in num_obj_rev_list:
+                    # 一致するマスタのレコードに対して対象曜日のレコードを追加する
+                    if nor["id"] == noo.id:
+                        nor["sum_dic_list"].append({
+                            "header": numofweek_dic[noo.day_of_week],
+                            "val": noo.sumval,
+                            "cnt": noo.cnt,
+                        })
     elif input_unit == "Y":
         pass
     print("ret_dic: " + str(ret_dic))
