@@ -696,9 +696,9 @@ def get_numobj_summary(input_unit, user, target_date):
         from objectives_numberobjectivemaster m
         left outer join 
         (
-        select master_id, year, month, sum(output_value) sumval, count(*) cnt
-        from objectives_numberobjectiveoutput
-        group by master_id, year, month
+            select master_id, year, month, sum(output_value) sumval, count(*) cnt
+            from objectives_numberobjectiveoutput
+            group by master_id, year, month
         ) oo_sum
         on m.id = oo_sum.master_id
         and oo_sum.year = %s
@@ -753,7 +753,64 @@ def get_numobj_summary(input_unit, user, target_date):
                             "cnt": noo.cnt,
                         })
     elif input_unit == "Y":
-        pass
+        # 集計レコード
+        num_obj_rev_qry = NumberObjectiveMaster.objects.raw(
+        '''
+        select m.id, m.name, m.number_kind, m.summary_kind, oo_sum.sumval, oo_sum.cnt
+        from objectives_numberobjectivemaster m
+        left outer join
+        (
+            select master_id, year, sum(output_value) sumval, count(*) cnt
+            from objectives_numberobjectiveoutput
+            group by master_id, year
+        ) oo_sum
+        on m.id = oo_sum.master_id
+        and oo_sum.year = %s
+        where m.user_id = %s
+        order by m.order_index
+        ''' % (year, user.id)
+        )
+        for nor in num_obj_rev_qry:
+            num_obj_rev_list.append({
+                "id": nor.id,
+                "name": nor.name,
+                "number_kind": nor.number_kind,
+                "summary_kind": nor.summary_kind,
+                # 集計値リスト：総集計のみlistにセットしておく
+                "sum_dic_list": [{
+                    "header": "集計",
+                    "val": nor.sumval,
+                    "cnt": nor.cnt,
+                }]
+            })
+        # 月ごとのレコード作成
+        num_obj_out = NumberObjectiveOutput.objects.raw(
+        '''
+        select m.id, oo_sum.month, oo_sum.sumval, oo_sum.cnt
+        from objectives_numberobjectivemaster m
+        left outer join
+        (
+            select master_id, month, sum(output_value) sumval, count(*) cnt
+            from objectives_numberobjectiveoutput
+            where year = %s
+            group by master_id, month
+        ) oo_sum
+        on m.id = oo_sum.master_id
+        where m.user_id = %s
+        and   oo_sum.cnt > 0
+        order by m.order_index, oo_sum.month
+        ''' % (year, user.id)
+        )
+        if num_obj_out:
+            for noo in num_obj_out:
+                for nor in num_obj_rev_list:
+                    # 一致するマスタのレコードに対して対象月のレコードを追加する
+                    if nor["id"] == noo.id:
+                        nor["sum_dic_list"].append({
+                            "header": str(noo.month) + "月",
+                            "val": noo.sumval,
+                            "cnt": noo.cnt,
+                        })
     print("ret_dic: " + str(ret_dic))
     return ret_dic
 
