@@ -4,10 +4,16 @@
 <td>{{ obj.objective_value|num_to_time }}</td>
 {% endif %}
 <!-- 合計or平均 -->
+{% for hd in sum_header %}
 <td>
-    {% if obj.summary_kind == 'S' %}
-    {{ obj.sumval|num_to_time }}
-    {% elif obj.summary_kind == 'A' %}
-    {{ obj.sumval|dividie:obj.cnt|num_to_time }}
-    {% endif %}
+    {% for sum_dic in obj.sum_dic_list %}
+        {% if hd == sum_dic.header %}
+            {% if obj.summary_kind == 'S' %}
+                {{ sum_dic.sumval|num_to_time }}
+            {% elif obj.summary_kind == 'A' %}
+                {{ sum_dic.sumval|dividie:sum_dic.cnt|num_to_time }}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
 </td>
+{% endfor %}

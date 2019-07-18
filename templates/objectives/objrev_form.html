@@ -89,7 +89,9 @@
             {% if input_unit == "W" %}
             <th>目標値</th>
             {% endif %}
-            <th>実績</th>
+            {% for hd in sum_header %}
+            <th>{{ hd }}</th>
+            {% endfor %}
         </thead>
         <tbody>
             {% for obj in num_obj_rev %}
@@ -104,6 +106,7 @@
                     平均
                 {% endif %}
                 </td>
+                <!--TODO-->
                 {% if obj.number_kind == 'N' %}
                     {% include "objectives/_objrev_number.html" %}
                 {% elif obj.number_kind == 'P' %}

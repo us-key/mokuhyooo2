@@ -525,7 +525,7 @@ def display_objrev_form(request, key, target_date):
     if key[2:] == "R":
         # 週
         # 目標名、目標値、合計値、件数
-        get_numobj_summary(key[1:2], request.user, target_date)
+        ret_obj = get_numobj_summary(key[1:2], request.user, target_date)
         
         if key[1:2] == "W":
             num_obj_rev = NumberObjectiveMaster.objects.raw(
@@ -594,7 +594,8 @@ def display_objrev_form(request, key, target_date):
         'free_input_rev': free_input_rev,
         'target_period_str': target_period_str,
         'target_date_str': target_date_str,
-        'num_obj_rev': num_obj_rev,
+        'sum_header': ret_obj['sum_header'],
+        'num_obj_rev': ret_obj['num_obj_rev'],
     })
 
 def get_numobj_summary(input_unit, user, target_date):
@@ -728,7 +729,7 @@ def get_numobj_summary(input_unit, user, target_date):
         '''
         select m.id, oo_sum.day_of_week, oo_sum.sumval, oo_sum.cnt
         from objectives_numberobjectivemaster m
-        left outer join
+        left join
         (
             select master_id, day_of_week, sum(output_value) sumval, count(*) cnt
             from objectives_numberobjectiveoutput
@@ -738,7 +739,7 @@ def get_numobj_summary(input_unit, user, target_date):
         ) oo_sum
         on m.id = oo_sum.master_id
         where m.user_id = %s
-        and   oo_sum.cnt > 0
+        and oo_sum.cnt > 0
         order by m.order_index, oo_sum.day_of_week
         ''' % (year, month, user.id)
         )
@@ -788,7 +789,7 @@ def get_numobj_summary(input_unit, user, target_date):
         '''
         select m.id, oo_sum.month, oo_sum.sumval, oo_sum.cnt
         from objectives_numberobjectivemaster m
-        left outer join
+        left join
         (
             select master_id, month, sum(output_value) sumval, count(*) cnt
             from objectives_numberobjectiveoutput
@@ -797,7 +798,7 @@ def get_numobj_summary(input_unit, user, target_date):
         ) oo_sum
         on m.id = oo_sum.master_id
         where m.user_id = %s
-        and   oo_sum.cnt > 0
+        and oo_sum.cnt > 0
         order by m.order_index, oo_sum.month
         ''' % (year, user.id)
         )
@@ -832,9 +833,6 @@ def get_sum_header(input_unit, target_date):
             ret_list.append("%s月" % work_month)
             work_month = work_month + 1
     return ret_list
-
-        
-
 
 def get_free_input_year(year, input_kind, user):
     return FreeInput.objects.filter(

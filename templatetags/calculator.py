@@ -4,14 +4,14 @@ register = template.Library()
 
 @register.filter
 def dividie(value, args):
-    if value is None or args is None or value == 0 or args == 0:
+    if value is None or args is None or value == 0 or args == 0 or value == "":
         return 0
     else:
         return value // args
 
 @register.filter
 def percentie(value, args):
-    if value is None or args is None or value == 0 or args == 0:
+    if value is None or args is None or value == 0 or args == 0 or value == "":
         return 0
     else:
         return dividie(value*100, args)
