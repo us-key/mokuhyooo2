@@ -9,9 +9,9 @@
     {% for sum_dic in obj.sum_dic_list %}
         {% if hd == sum_dic.header %}
             {% if obj.summary_kind == 'S' %}
-                {{ sum_dic.sumval|num_to_time }}
+                {{ sum_dic.val|num_to_time }}
             {% elif obj.summary_kind == 'A' %}
-                {{ sum_dic.sumval|dividie:sum_dic.cnt|num_to_time }}
+                {{ sum_dic.val|dividie:sum_dic.cnt|num_to_time }}
             {% endif %}
         {% endif %}
     {% endfor %}
