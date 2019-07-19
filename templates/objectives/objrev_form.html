@@ -79,26 +79,24 @@
 <!-- 振り返りの場合、数値目標の実績集計値も表示 -->
 {% if input_kind == "R" %}
 <div class="row">
-    <div class="col-12">数値目標</div>
-</div>
-<div class="row">
     <table class="table table-hover">
         <thead>
-            <th></th>
-            <th></th>
-            {% if input_unit == "W" %}
-            <th>目標値</th>
-            {% endif %}
-            {% for hd in sum_header %}
-            <th>{{ hd }}</th>
-            {% endfor %}
+            <tr class="obj_rev_head">
+                <th colspan="2">数値目標</th>
+                {% if input_unit == "W" %}
+                <th>目標値</th>
+                {% endif %}
+                {% for hd in sum_header %}
+                <th>{{ hd }}</th>
+                {% endfor %}        
+            </tr>
         </thead>
         <tbody>
             {% for obj in num_obj_rev %}
-            <tr>
-                <td>
+            <tr class="obj_rev_tr">
+                <th>
                     {{ obj.name }}
-                </td>
+                </th>
                 <td style="text-align: right">
                 {% if obj.summary_kind == 'S' %}
                     合計

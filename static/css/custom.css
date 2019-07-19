@@ -33,3 +33,11 @@
 .tooltip-inner {
   max-width: 90vw;
 }
+
+.obj_rev_tr > td {
+  text-align: right;
+}
+
+.obj_rev_head > th {
+  text-align: center;
+}

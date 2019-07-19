@@ -594,8 +594,8 @@ def display_objrev_form(request, key, target_date):
         'free_input_rev': free_input_rev,
         'target_period_str': target_period_str,
         'target_date_str': target_date_str,
-        'sum_header': ret_obj['sum_header'],
-        'num_obj_rev': ret_obj['num_obj_rev'],
+        'sum_header': ret_obj['sum_header'] if key[2:] == "R" else {},
+        'num_obj_rev': ret_obj['num_obj_rev'] if key[2:] == "R" else {},
     })
 
 def get_numobj_summary(input_unit, user, target_date):

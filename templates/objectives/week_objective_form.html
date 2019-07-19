@@ -78,15 +78,13 @@
         </div>
     </div>
     <!-- 数値目標 -->
-    <div class="col-4">数値目標</div>
-    <div class="col-8 msg-area"></div>
+    <div class="col-12 msg-area"></div>
 </div>
 <div class="row">
     <table class="table table-hover">
         <thead>
-            <tr>
-                <th></th>
-                <th></th>
+            <tr class="obj_rev_head">
+                <th colspan="2">数値目標</th>
                 <th>目標値</th>
                 <th>前週実績</th> 
             </tr>
@@ -95,10 +93,10 @@
         <!-- 数値目標マスタ件数分行を作る -->
         {% for master in masters %}
             <!-- 名称 -->
-            <tr class="wk_obj_row" id="row_{{ master.id }}">
-                <td>
+            <tr class="obj_rev_tr wk_obj_row" id="row_{{ master.id }}">
+                <th>
                     {{ master.name }}
-                </td>
+                </th>
                 <!-- 集計単位 -->
                 <td style="text-align: right">
                 {% if master.summary_kind == 'S' %}
