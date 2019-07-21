@@ -267,36 +267,38 @@
     </div>
     <div class="col-md-6 col-12">
         <div class="msg-area"></div>
-        <table class="table table-hover">
-          <thead>
-            <tr class="obj_rev_head">
-              <th colspan="3">数値目標</th>
-              <th>今日の実績 <a href="#" class="do_post"><i class="fas fa-upload"></i></a></th>
-              <th>進捗状況</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for numObj in numberObjective %}
-            <tr class="obj_rev_tr d_out_row d_row_{{ numObj.masterid }}" id="row_{{ numObj.id|default_if_none:'' }}">
-              <th scope="row">{{ numObj.name }}</th>
-              <td>
-              {% if numObj.summary_kind == 'S' %}
-                週
-              {% elif numObj.summary_kind == 'A' %}
-                平均
-              {% endif %}
-              </td>
-              {% if numObj.number_kind == 'N' %}
-                {% include "objectives/_daily_output_number.html" %}
-              {% elif numObj.number_kind == 'P' %}
-                {% include "objectives/_daily_output_period.html" %}
-              {% elif numObj.number_kind == 'T' %}
-                {% include "objectives/_daily_output_time.html" %}
-              {% endif %}
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-hover text-nowrap">
+                <thead>
+                    <tr class="obj_rev_head">
+                    <th colspan="3">数値目標</th>
+                    <th>今日の実績 <a href="#" class="do_post"><i class="fas fa-upload"></i></a></th>
+                    <th>進捗状況</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for numObj in numberObjective %}
+                    <tr class="obj_rev_tr d_out_row d_row_{{ numObj.masterid }}" id="row_{{ numObj.id|default_if_none:'' }}">
+                    <th scope="row">{{ numObj.name }}</th>
+                    <td>
+                    {% if numObj.summary_kind == 'S' %}
+                        週
+                    {% elif numObj.summary_kind == 'A' %}
+                        平均
+                    {% endif %}
+                    </td>
+                    {% if numObj.number_kind == 'N' %}
+                        {% include "objectives/_daily_output_number.html" %}
+                    {% elif numObj.number_kind == 'P' %}
+                        {% include "objectives/_daily_output_period.html" %}
+                    {% elif numObj.number_kind == 'T' %}
+                        {% include "objectives/_daily_output_time.html" %}
+                    {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>              
+        </div>
     </div>
 </div>
 {% else %}

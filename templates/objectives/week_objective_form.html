@@ -81,42 +81,44 @@
     <div class="col-12 msg-area"></div>
 </div>
 <div class="row">
-    <table class="table table-hover">
-        <thead>
-            <tr class="obj_rev_head">
-                <th colspan="2">数値目標</th>
-                <th>目標値</th>
-                <th>前週実績</th> 
-            </tr>
-        </thead>
-        <tbody>
-        <!-- 数値目標マスタ件数分行を作る -->
-        {% for master in masters %}
-            <!-- 名称 -->
-            <tr class="obj_rev_tr wk_obj_row" id="row_{{ master.id }}">
-                <th>
-                    {{ master.name }}
-                </th>
-                <!-- 集計単位 -->
-                <td style="text-align: right">
-                {% if master.summary_kind == 'S' %}
-                    週
-                {% elif master.summary_kind == 'A' %}
-                    平均
-                {% endif %}
-                </td>
-                <!-- number_kind毎に形式分け -->
-                {% if master.number_kind == 'N' %}
-                    {% include "objectives/_week_objective_number.html" %}
-                {% elif master.number_kind == 'P' %}
-                    {% include "objectives/_week_objective_period.html" %}
-                {% elif master.number_kind == 'T' %}
-                    {% include "objectives/_week_objective_time.html" %}     
-                {% endif %}
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-hover text-nowrap">
+            <thead>
+                <tr class="obj_rev_head">
+                    <th colspan="2">数値目標</th>
+                    <th>目標値</th>
+                    <th>前週実績</th> 
+                </tr>
+            </thead>
+            <tbody>
+            <!-- 数値目標マスタ件数分行を作る -->
+            {% for master in masters %}
+                <!-- 名称 -->
+                <tr class="obj_rev_tr wk_obj_row" id="row_{{ master.id }}">
+                    <th>
+                        {{ master.name }}
+                    </th>
+                    <!-- 集計単位 -->
+                    <td style="text-align: right">
+                    {% if master.summary_kind == 'S' %}
+                        週
+                    {% elif master.summary_kind == 'A' %}
+                        平均
+                    {% endif %}
+                    </td>
+                    <!-- number_kind毎に形式分け -->
+                    {% if master.number_kind == 'N' %}
+                        {% include "objectives/_week_objective_number.html" %}
+                    {% elif master.number_kind == 'P' %}
+                        {% include "objectives/_week_objective_period.html" %}
+                    {% elif master.number_kind == 'T' %}
+                        {% include "objectives/_week_objective_time.html" %}     
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="row">
