@@ -10,8 +10,14 @@
         {% if hd == sum_dic.header %}
             {% if obj.summary_kind == 'S' %}
                 {{ sum_dic.val|default_if_none:0 }}
+                {% if hd == '集計' %}
+                / {{ sum_dic.val|percentie:obj.objective_value }} %
+                {% endif %}
             {% elif obj.summary_kind == 'A' %}
                 {{ sum_dic.val|dividie:sum_dic.cnt }}
+                {% if hd == '集計' %}
+                / {{ sum_dic.val|dividie:sum_dic.cnt|percentie:obj.objective_value }} %
+                {% endif %}
             {% endif %}    
         {% endif %}
     {% endfor %}
