@@ -8,16 +8,20 @@
 <td>
     {% for sum_dic in obj.sum_dic_list %}
         {% if hd == sum_dic.header %}
-            {% if obj.summary_kind == 'S' %}
+            {% if obj.summary_kind == "S" %}
                 {{ sum_dic.val|num_to_time }}
-                {% if hd == '集計' %}
+                {% if hd == "集計" and input_unit == "W" %}
                 / {{ sum_dic.val|percentie:obj.objective_value }} %
                 {% endif %}
-            {% elif obj.summary_kind == 'A' %}
+            {% elif obj.summary_kind == "A" %}
                 {{ sum_dic.val|dividie:sum_dic.cnt|num_to_time }}
-                {% if hd == '集計' %}
+                {% if hd == "集計" and input_unit == "W" %}
                 / {{ sum_dic.val|dividie:sum_dic.cnt|percentie:obj.objective_value }} %
                 {% endif %}
+            {% endif %}
+            <!-- 週振り返り以外では件数表示 -->
+            {% if input_unit != "W" %}
+                ({{ sum_dic.cnt }})
             {% endif %}
         {% endif %}
     {% endfor %}
