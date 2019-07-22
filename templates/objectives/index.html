@@ -199,34 +199,47 @@
     {% endif %}
 {% endfor %}
 <div class="row">
-    <div class="col-6">
-        <p>
-            <i class="{{ objRevFlgList.TYO|get_checkbox }}"></i>
-            <a href="{{ 'TYO'|create_obj_rev_link:display_date }}">年目標</a>
-        </p>
-        <p>
-            <i class="{{ objRevFlgList.TMO|get_checkbox }}"></i>
-            <a href="{{ 'TMO'|create_obj_rev_link:display_date }}">月目標</a>
-        </p>
-    </div>
-    <div class="col-6">
-        <p>
-            <i class="{{ objRevFlgList.TYR|get_checkbox }}"></i>
-            <a href="{{ 'TYR'|create_obj_rev_link:display_date }}">年振返り</a>
-        </p>
-        <p>
-            <i class="{{ objRevFlgList.TMR|get_checkbox }}"></i>
-            <a href="{{ 'TMR'|create_obj_rev_link:display_date }}">月振返り</a>
-        </p>
-        <p>
-            <i class="{{ objRevFlgList.TWR|get_checkbox }}"></i>
-            <a href="{{ 'TWR'|create_obj_rev_link:display_date }}">週振返り</a>
-        </p>
-    </div>
-</div>
+    <div class="col-md-6 col-12">
+        <div class="row">
+            <div class="col-md-6 col-12">
+                <p>
+                    <i class="{{ objRevFlgList.TYO|get_checkbox }}"></i>
+                    <a href="{{ 'TYO'|create_obj_rev_link:display_date }}">年目標</a>
+                </p>
+            </div>
+            <div class="col-md-6 col-12">
+                {% if objRevFlgList.TYO == "1" %}
+                <p>
+                    <i class="{{ objRevFlgList.TYR|get_checkbox }}"></i>
+                    <a href="{{ 'TYR'|create_obj_rev_link:display_date }}">年振返り</a>
+                </p>
+                {% endif %}
+            </div>
+            <div class="col-md-6 col-12">
+                <p>
+                    <i class="{{ objRevFlgList.TMO|get_checkbox }}"></i>
+                    <a href="{{ 'TMO'|create_obj_rev_link:display_date }}">月目標</a>
+                </p>
+            </div>
+            <div class="col-md-6 col-12">
+                {% if objRevFlgList.TMO == "1" %}
+                <p>
+                    <i class="{{ objRevFlgList.TMR|get_checkbox }}"></i>
+                    <a href="{{ 'TMR'|create_obj_rev_link:display_date }}">月振返り</a>
+                </p>
+                {% endif %}
+            </div>
+            <div class="col-md-6 col-12">
+
+            </div>
+            <div class="col-md-6 col-12">
+                <p>
+                    <i class="{{ objRevFlgList.TWR|get_checkbox }}"></i>
+                    <a href="{{ 'TWR'|create_obj_rev_link:display_date }}">週振返り</a>
+                </p>
+            </div>
+        </div>
 {% if weekFreeObjective %}
-<div class="row">
-    <div class="col-12">
         <div class="form-group objective-review-group">
             <label>今週の目標 
                 <a href="{% url 'objectives:week_objective_edit' display_date %}">
@@ -240,10 +253,6 @@
         </div>
         <p>
         </p>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-6 col-12">
         <div class="form-group objective-review-group">
             <label>今日の目標 
                 <a id="D_O_link_{{ dateFreeObjective.id|default_if_none:'' }}" href="{% url 'objectives:ajax_freeword_register' %}" class="fw_post">
