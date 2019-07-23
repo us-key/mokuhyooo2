@@ -35,6 +35,13 @@ def create_obj_rev_link(key, target_date):
 @register.filter
 def get_checkbox(key):
     if key == "1":
-        return "fas fa-check-square"
+        return "fas fa-check-circle"
     else:
-        return "far fa-square"
+        return "far fa-circle"
+
+@register.filter
+def get_btn_class(key):
+    if key == "1":
+        return "btn btn-success"
+    else:
+        return "btn btn-outline-secondary"
