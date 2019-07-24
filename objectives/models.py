@@ -92,6 +92,7 @@ class NumberObjective(models.Model):
     ・年(isoclendar)
     ・週番号
     ・目標値：時間の場合は分単位で記録、時刻の場合は00:00基準で分を記録
+    ・目標達成フラグ：集計種別が「合計」で目標達成した場合、トップで目標達成メッセージを表示したあとフラグを立てる
     '''
     master = models.ForeignKey(
         NumberObjectiveMaster,
@@ -100,6 +101,10 @@ class NumberObjective(models.Model):
     iso_year = models.PositiveSmallIntegerField()
     week_index = models.PositiveSmallIntegerField()
     objective_value = models.PositiveIntegerField()
+    achieve_flg = models.CharField(
+        max_length=1,
+        default="0",
+    )
 
 class NumberObjectiveOutput(models.Model):
     '''数値目標実績：日毎の数値目標実績を登録
