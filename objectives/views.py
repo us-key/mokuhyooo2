@@ -207,7 +207,7 @@ def ajax_freeword_register(request):
         freeInput = FreeInput.objects.get(id=id)
         freeInput.free_word = free_word
         freeInput.save()
-        msg+="更新しました。"
+        msg+="更新しました！"
     else:
         print("create")
         freeInput = FreeInput(
@@ -220,7 +220,7 @@ def ajax_freeword_register(request):
             user = request.user,
         )
         freeInput.save()
-        msg+="登録しました。"
+        msg+="登録しました！"
     # TODO エラーハンドリング
     return HttpResponse(msg)
 

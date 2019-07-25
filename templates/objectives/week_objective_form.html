@@ -56,7 +56,12 @@
                     timeout: 10000,
                 })
                 .done(function(){
-                    console.log("週目標登録完了")
+                    swal({
+                        title: "週の目標を登録しました！",
+                        icon: "success",
+                        text: " ", // ダイアログのサイズ調整のためtext設定
+                        buttons: false,
+                    });
                     window.location.href = "{% url 'objectives:index' %}";
                 })
                 .always(function(){

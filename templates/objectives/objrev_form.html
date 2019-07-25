@@ -43,8 +43,13 @@
                 datatype: "text",
             })
             .done(function(msg){
-                alert(msg);
-                location = "{% url 'objectives:index' %}";
+                swal({
+                    title: msg,
+                    icon: "success",
+                    text: " ", // ダイアログのサイズ調整のためtext設定
+                    buttons: false,
+                });
+                window.location.href = "{% url 'objectives:index' %}";
             })
             .always(function(){
                 removeLoading();

@@ -96,7 +96,12 @@
                 datatype: "text",
             })
             .done(function(msg){
-                alert(msg);
+                swal({
+                    title: msg,
+                    icon: "success",
+                    text: " ", // ダイアログのサイズ調整のためtext設定
+                    buttons: false,
+                });
                 // TODO 登録完了メッセージをヘッダに出す
                 // TODO 一旦リロードするが、他項目など登録していないと消えてしまうため、
                 // 最終的にはajaxでid受け取って上書きするようにする。
@@ -156,7 +161,12 @@
                     timeout: 10000,
                 })
                 .done(function(){
-                    alert("実績登録完了")
+                    swal({
+                        title: "実績登録完了！",
+                        icon: "success",
+                        text: " ", // ダイアログのサイズ調整のためtext設定
+                        buttons: false,
+                    });
                     location.reload();
                     // TODO 一旦リロードするが、他項目など登録していないと消えてしまうため、
                     // 最終的にはajaxでid受け取って上書きするようにする。
