@@ -58,7 +58,7 @@ class NumberObjectiveMasterUpdateView(LoginRequiredMixin, UpdateView):
 def display_index(request):
     today = date.today().strftime("%Y-%m-%d")
     # 今日日付でデータ取得
-    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList = get_date_data(request, today)
+    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item = get_date_data(request, today)
 
     return render(request, 'objectives/index.html', {
         'display_date': today,
@@ -67,6 +67,7 @@ def display_index(request):
         'weekFreeObjective': weekFreeObjective,
         'numberObjective': numberObjective,
         'objRevFlgList': objRevFlgList,
+        'achieve_item': achieve_item,
         })
 
 @login_required
@@ -77,7 +78,7 @@ def display_date_data(request):
 
 def display_date_data_from_view(request, target_date):
     '''templateからではなくviewでtarget_date指定してindex表示する'''
-    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList = get_date_data(request, target_date)
+    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item = get_date_data(request, target_date)
     return render(request, 'objectives/index.html', {
         'display_date': target_date,
         'dateFreeObjective': dateFreeObjective,
@@ -85,6 +86,7 @@ def display_date_data_from_view(request, target_date):
         'weekFreeObjective': weekFreeObjective,
         'numberObjective': numberObjective,
         'objRevFlgList': objRevFlgList,
+        'achieve_item': achieve_item,
         })
 
 @login_required
@@ -108,7 +110,7 @@ def get_date_data(request, display_date):
     '''
     numberObjective = NumberObjective.objects.raw(
         '''
-        select oo.id, m.id masterid, m.name, m.number_kind, m.summary_kind, o.objective_value, oo_sum.sumval, oo.output_value, oo_sum.cnt
+        select oo.id, m.id masterid, m.name, m.number_kind, m.summary_kind, o.objective_value, oo_sum.sumval, oo.output_value, oo_sum.cnt, o.achieve_flg
         from objectives_numberobjectivemaster m
         left join objectives_numberobjective o
         on m.id = o.master_id
@@ -134,7 +136,22 @@ def get_date_data(request, display_date):
         order by m.order_index
         ''' % (request.user.id, date_index, week_tuple[0], week_tuple[1])
     )
-    print(list(numberObjective))
+    # 目標達成した項目名と目標値を詰める辞書
+    achieve_item = {}
+    for obj in numberObjective:
+        # 集計種別が「合計」で目標達成か目標達成フラグが"0"の場合
+        # 返却する辞書に対象と達成した目標値をセットする
+        if obj.summary_kind == "S":
+            if obj.achieve_flg == "0" and obj.sumval >= obj.objective_value:
+                achieve_item[obj.name] = obj.objective_value
+                num_obj = NumberObjective.objects.filter(
+                    master__id=obj.masterid,
+                    iso_year=week_tuple[0],
+                    week_index=week_tuple[1],
+                ).first()
+                num_obj.achieve_flg = "1"
+                num_obj.save()
+
     # 自由入力の取得
     dateFreeObjective = get_free_input_date(year, date_index, "O", request.user).first()
     dateFreeReview = get_free_input_date(year, date_index, "R", request.user).first()
@@ -165,7 +182,7 @@ def get_date_data(request, display_date):
         'PDR': '0' if (get_free_input_date(pDYear, pDDate_index, "O", request.user)
                 and not get_free_input_date(pDYear, pDDate_index, "R", request.user)) else '1',
     }
-    return dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList
+    return dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item
 
 @login_required
 def ajax_freeword_register(request):

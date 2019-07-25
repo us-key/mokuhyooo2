@@ -5,6 +5,17 @@
     $(function () {
         $("#block-content").removeClass("pad-top-56");
         $("#block-content").addClass("pad-top-96");
+        var text = "";
+        {% for k,v in achieve_item.items %}
+            text += ("{{k}}" + " : " + {{v}} + "\n");
+        {% endfor %}
+        if (text != "") {
+            swal({
+                title: "今週の目標を達成しました！",
+                text: text,
+                icon: "success",
+            });
+        }
         $('#datetimepicker').datetimepicker({
             locale: moment.locale('ja', {
                 week: { dow: 1 }
