@@ -142,7 +142,7 @@ def get_date_data(request, display_date):
         # 集計種別が「合計」で目標達成か目標達成フラグが"0"の場合
         # 返却する辞書に対象と達成した目標値をセットする
         if obj.summary_kind == "S":
-            if obj.achieve_flg == "0" and obj.sumval >= obj.objective_value:
+            if obj.achieve_flg == "0" and obj.sumval is not None and obj.sumval >= obj.objective_value:
                 achieve_item[obj.name] = obj.objective_value
                 num_obj = NumberObjective.objects.filter(
                     master__id=obj.masterid,
