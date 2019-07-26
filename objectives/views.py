@@ -151,6 +151,8 @@ def get_date_data(request, display_date):
                 ).first()
                 num_obj.achieve_flg = "1"
                 num_obj.save()
+                # TODO 連続達成のカウント
+
 
     # 自由入力の取得
     dateFreeObjective = get_free_input_date(year, date_index, "O", request.user).first()
