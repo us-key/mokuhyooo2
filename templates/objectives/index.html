@@ -1,13 +1,23 @@
 {% extends "_base.html" %}
 {% block content %}
 {% load cmn_filter %}
+{% load calculator %}
 <script type="text/javascript">
     $(function () {
         $("#block-content").removeClass("pad-top-56");
         $("#block-content").addClass("pad-top-96");
         var text = "";
         {% for k,v in achieve_item.items %}
-            text += ("{{k}}" + " : " + {{v}} + "\n");
+            v_arr = "{{v}}".split("_");
+            var val = v_arr[0];
+            if (v_arr[1] != "N") {
+                val = Math.floor(v_arr[0] / 60) + ":" + ("00" + (v_arr[0] % 60)).slice(-2);
+            }
+            cons_msg = "";
+            if (v_arr[2] > 1) {
+                cons_msg = v_arr[2] + "週連続達成！"
+            }
+            text += ("{{k}}" + " : " + val + " " + cons_msg + "\n");
         {% endfor %}
         if (text != "") {
             swal({

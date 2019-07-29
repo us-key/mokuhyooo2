@@ -143,15 +143,34 @@ def get_date_data(request, display_date):
         # 返却する辞書に対象と達成した目標値をセットする
         if obj.summary_kind == "S":
             if obj.achieve_flg == "0" and obj.sumval is not None and obj.sumval >= obj.objective_value:
-                achieve_item[obj.name] = obj.objective_value
                 num_obj = NumberObjective.objects.filter(
                     master__id=obj.masterid,
                     iso_year=week_tuple[0],
                     week_index=week_tuple[1],
                 ).first()
                 num_obj.achieve_flg = "1"
+
+                # 前週のレコード取得:前週も達成していた場合、連続達成のカウント
+                prev_wk_isoyear = week_tuple[0]
+                prev_wk_idx = week_tuple[1] - 1
+                if prev_wk_idx == 0:
+                    # 1週目だった場合、前年最終週のindex設定
+                    # 前週の変数取得
+                    pWYear, pWMonth, pWDate_index, pWWeek_tuple = get_date(get_date_str_diff(display_date, -7))
+                    prev_wk_isoyear = pWWeek_tuple[0]
+                    prev_wk_idx = pWWeek_tuple[1]
+                prev_num_obj = NumberObjective.objects.filter(
+                    master__id=obj.masterid,
+                    iso_year=prev_wk_isoyear,
+                    week_index=prev_wk_idx,
+                ).first()
+                if prev_num_obj is None:
+                    num_obj.consecutive_count = 1
+                else:
+                    num_obj.consecutive_count = prev_num_obj.consecutive_count + 1
+
                 num_obj.save()
-                # TODO 連続達成のカウント
+                achieve_item[obj.name] = str(obj.objective_value) + "_" + obj.number_kind + "_" + str(num_obj.consecutive_count) 
 
 
     # 自由入力の取得
