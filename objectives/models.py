@@ -106,7 +106,7 @@ class NumberObjective(models.Model):
         max_length=1,
         default="0",
     )
-    consective_count = models.PositiveSmallIntegerField(
+    consecutive_count = models.PositiveSmallIntegerField(
         default=0,
     )
 
