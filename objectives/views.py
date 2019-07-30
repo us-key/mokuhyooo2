@@ -8,7 +8,7 @@ from django.http.response import JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView, UpdateView
-from django.db.models import Max
+from django.db.models import Max, Sum
 
 from datetime import datetime,date,timedelta
 
@@ -58,7 +58,7 @@ class NumberObjectiveMasterUpdateView(LoginRequiredMixin, UpdateView):
 def display_index(request):
     today = date.today().strftime("%Y-%m-%d")
     # 今日日付でデータ取得
-    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item = get_date_data(request, today)
+    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item, exceed_item = get_date_data(request, today)
 
     return render(request, 'objectives/index.html', {
         'display_date': today,
@@ -68,6 +68,7 @@ def display_index(request):
         'numberObjective': numberObjective,
         'objRevFlgList': objRevFlgList,
         'achieve_item': achieve_item,
+        'exceed_item': exceed_item,
         })
 
 @login_required
@@ -78,7 +79,7 @@ def display_date_data(request):
 
 def display_date_data_from_view(request, target_date):
     '''templateからではなくviewでtarget_date指定してindex表示する'''
-    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item = get_date_data(request, target_date)
+    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item, exceed_item = get_date_data(request, target_date)
     return render(request, 'objectives/index.html', {
         'display_date': target_date,
         'dateFreeObjective': dateFreeObjective,
@@ -87,6 +88,7 @@ def display_date_data_from_view(request, target_date):
         'numberObjective': numberObjective,
         'objRevFlgList': objRevFlgList,
         'achieve_item': achieve_item,
+        'exceed_item': exceed_item,
         })
 
 @login_required
@@ -110,7 +112,7 @@ def get_date_data(request, display_date):
     '''
     numberObjective = NumberObjective.objects.raw(
         '''
-        select oo.id, m.id masterid, m.name, m.number_kind, m.summary_kind, o.objective_value, oo_sum.sumval, oo.output_value, oo_sum.cnt, o.achieve_flg
+        select oo.id, m.id masterid, m.name, m.number_kind, m.summary_kind, o.objective_value, oo_sum.sumval, oo.output_value, oo_sum.cnt, o.achieve_flg, o.exceed_flg
         from objectives_numberobjectivemaster m
         left join objectives_numberobjective o
         on m.id = o.master_id
@@ -138,10 +140,12 @@ def get_date_data(request, display_date):
     )
     # 目標達成した項目名と目標値を詰める辞書
     achieve_item = {}
+    # 前週の実績を超えた項目名と前週の実績を詰める辞書
+    exceed_item = {}
     for obj in numberObjective:
-        # 集計種別が「合計」で目標達成か目標達成フラグが"0"の場合
-        # 返却する辞書に対象と達成した目標値をセットする
         if obj.summary_kind == "S":
+            # 集計種別が「合計」で目標達成かつ目標達成フラグが"0"の場合
+            # 返却する辞書に対象と達成した目標値、連続達成回数をセットする
             if obj.achieve_flg == "0" and obj.sumval is not None and obj.sumval >= obj.objective_value:
                 num_obj = NumberObjective.objects.filter(
                     master__id=obj.masterid,
@@ -151,19 +155,13 @@ def get_date_data(request, display_date):
                 num_obj.achieve_flg = "1"
 
                 # 前週のレコード取得:前週も達成していた場合、連続達成のカウント
-                prev_wk_isoyear = week_tuple[0]
-                prev_wk_idx = week_tuple[1] - 1
-                if prev_wk_idx == 0:
-                    # 1週目だった場合、前年最終週のindex設定
-                    # 前週の変数取得
-                    pWYear, pWMonth, pWDate_index, pWWeek_tuple = get_date(get_date_str_diff(display_date, -7))
-                    prev_wk_isoyear = pWWeek_tuple[0]
-                    prev_wk_idx = pWWeek_tuple[1]
+                prev_wk_isoyear, prev_wk_idx = get_prev_iso(week_tuple)
                 prev_num_obj = NumberObjective.objects.filter(
                     master__id=obj.masterid,
                     iso_year=prev_wk_isoyear,
                     week_index=prev_wk_idx,
                 ).first()
+
                 if prev_num_obj is None:
                     num_obj.consecutive_count = 1
                 else:
@@ -171,6 +169,39 @@ def get_date_data(request, display_date):
 
                 num_obj.save()
                 achieve_item[obj.name] = str(obj.objective_value) + "_" + obj.number_kind + "_" + str(num_obj.consecutive_count) 
+            # 集計種別が「合計」で実績アップかつ実績アップフラグが"0"の場合
+            # 返却する辞書に対象と前週の実績値、連続達成回数をセットする
+            if obj.exceed_flg == "0" and obj.sumval is not None:
+                # 前週の実績集計
+                prev_wk_isoyear, prev_wk_idx = get_prev_iso(week_tuple)
+                prev_num_obj_out = NumberObjectiveOutput.objects.filter(
+                    master__id=obj.masterid,
+                    iso_year=prev_wk_isoyear,
+                    week_index=prev_wk_idx,
+                ).values("master__id").annotate(sumval=Sum("output_value")).first()
+                if prev_num_obj_out:
+                    prev_sumval = prev_num_obj_out["sumval"]
+                    if prev_sumval and prev_sumval < obj.sumval:
+                        num_obj = NumberObjective.objects.filter(
+                            master__id=obj.masterid,
+                            iso_year=week_tuple[0],
+                            week_index=week_tuple[1],
+                        ).first()
+                        num_obj.exceed_flg = "1"
+                        # 前週のレコード取得:前週も実績アップしていた場合、連続達成のカウント
+                        prev_wk_isoyear, prev_wk_idx = get_prev_iso(week_tuple)
+                        prev_num_obj = NumberObjective.objects.filter(
+                            master__id=obj.masterid,
+                            iso_year=prev_wk_isoyear,
+                            week_index=prev_wk_idx,
+                        ).first()
+                        if prev_num_obj is None:
+                            num_obj.exceed_consecutive_count = 1
+                        else:
+                            num_obj.exceed_consecutive_count = prev_num_obj.exceed_consecutive_count + 1
+                        num_obj.save()
+                        exceed_item[obj.name] = str(prev_sumval) + "_" + obj.number_kind + "_" + str(num_obj.exceed_consecutive_count)
+                
 
 
     # 自由入力の取得
@@ -203,7 +234,7 @@ def get_date_data(request, display_date):
         'PDR': '0' if (get_free_input_date(pDYear, pDDate_index, "O", request.user)
                 and not get_free_input_date(pDYear, pDDate_index, "R", request.user)) else '1',
     }
-    return dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item
+    return dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item, exceed_item
 
 @login_required
 def ajax_freeword_register(request):
@@ -942,3 +973,14 @@ def get_week_start_and_end(target_date_str):
     start_date = target_date + timedelta(days=(1-week_tuple[2]))
     end_date = target_date + timedelta(days=7-week_tuple[2])
     return start_date, end_date
+
+def get_prev_iso(week_tuple):
+    prev_wk_isoyear = week_tuple[0]
+    prev_wk_idx = week_tuple[1] - 1
+    if prev_wk_idx == 0:
+        # 1週目だった場合、前年最終週のindex設定
+        # 前週の変数取得
+        pWYear, pWMonth, pWDate_index, pWWeek_tuple = get_date(get_date_str_diff(display_date, -7))
+        prev_wk_isoyear = pWWeek_tuple[0]
+        prev_wk_idx = pWWeek_tuple[1]
+    return prev_wk_isoyear, prev_wk_idx
