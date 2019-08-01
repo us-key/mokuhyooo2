@@ -201,8 +201,6 @@ def get_date_data(request, display_date):
                             num_obj.exceed_consecutive_count = prev_num_obj.exceed_consecutive_count + 1
                         num_obj.save()
                         exceed_item[obj.name] = str(prev_sumval) + "_" + obj.number_kind + "_" + str(num_obj.exceed_consecutive_count)
-                
-
 
     # 自由入力の取得
     dateFreeObjective = get_free_input_date(year, date_index, "O", request.user).first()
@@ -255,23 +253,31 @@ def ajax_freeword_register(request):
     msg_str_kind = {'O':'目標','R':'振返り'}
     msg=msg_str_unit[input_unit]+'の'+msg_str_kind[input_kind]+'を'
     if (id):
-        print("update")
         freeInput = FreeInput.objects.get(id=id)
         freeInput.free_word = free_word
         freeInput.save()
         msg+="更新しました！"
     else:
-        print("create")
-        freeInput = FreeInput(
+        # 二重登録防止
+        frIpt = FreeInput.objects.filter(
             input_unit = input_unit,
             input_kind = input_kind,
             year = register_year,
             day_index = day_index_dic[input_unit],
-            free_word = free_word,
-            input_status = 1,
             user = request.user,
-        )
-        freeInput.save()
+        ).first()
+        if frIpt is None:
+            freeInput = FreeInput(
+                input_unit = input_unit,
+                input_kind = input_kind,
+                year = register_year,
+                day_index = day_index_dic[input_unit],
+                free_word = free_word,
+                input_status = 1,
+                user = request.user,
+            )
+            freeInput.save()
+        # 中途半端なメッセージが送信されないよう、メッセージは作成
         msg+="登録しました！"
     # TODO エラーハンドリング
     return HttpResponse(msg)
@@ -302,22 +308,25 @@ def ajax_weekobj_create(request):
         year, month, date_index, week_tuple = get_date(target_date)
         print(free_word)
         if (free_word != ''):
+            freeInput = get_free_input_week(week_tuple[0], week_tuple[1], "O", request.user).first()
             # 新規作成
             if data["mode"] == "C":
-                freeInput = FreeInput(
-                    input_unit = 'W',
-                    input_kind = 'O',
-                    year = week_tuple[0],
-                    day_index = week_tuple[1],
-                    free_word = free_word,
-                    input_status = 1,
-                    user = request.user,
-                )
+                # 二重登録防止
+                if freeInput is None:
+                    freeInput = FreeInput(
+                        input_unit = 'W',
+                        input_kind = 'O',
+                        year = week_tuple[0],
+                        day_index = week_tuple[1],
+                        free_word = free_word,
+                        input_status = 1,
+                        user = request.user,
+                    )
+                    freeInput.save()
             # 更新
             else:
-                freeInput = get_free_input_week(week_tuple[0], week_tuple[1], "O", request.user).first()
                 freeInput.free_word = free_word
-            freeInput.save()
+                freeInput.save()
         objectives = data["objectives"]
         print(objectives)
         # 新規作成
@@ -407,7 +416,8 @@ def ajax_dateoutput_create(request):
                         master = NumberObjectiveMaster.objects.get(id=no.master.id)
                         # 登録
                         if master:
-                            numberObjectiveOutput = NumberObjectiveOutput(
+                            # 二重登録防止
+                            numObjOut = NumberObjectiveOutput.objects.filter(
                                 master = master,
                                 year = year,
                                 month = month,
@@ -415,9 +425,19 @@ def ajax_dateoutput_create(request):
                                 week_index = week_tuple[1],
                                 date_index = date_index,
                                 day_of_week = week_tuple[2],
-                                output_value = int(obj["value"]),
-                            )
-                            numberObjectiveOutput.save()
+                            ).first()
+                            if numObjOut is None:
+                                numberObjectiveOutput = NumberObjectiveOutput(
+                                    master = master,
+                                    year = year,
+                                    month = month,
+                                    iso_year = week_tuple[0],
+                                    week_index = week_tuple[1],
+                                    date_index = date_index,
+                                    day_of_week = week_tuple[2],
+                                    output_value = int(obj["value"]),
+                                )
+                                numberObjectiveOutput.save()
                     # フラグを立てる
                     flg = True
             if not flg:
@@ -446,8 +466,6 @@ def ajax_numobjmst_order_update(request):
         numobjmst.order_index = int(v)
         numobjmst.save()
     return JsonResponse({"msg": "ソート順を更新しました。"})
-
-
 
 @login_required
 def display_week_objective_form(request, datestr):
