@@ -84,14 +84,12 @@
                 datatype: "text",
             })
             .done(function(json){
-                id = "";
                 textarea_text = "";
                 if (json.length>0) {
-                    id = json[0].pk;
                     textarea_text = json[0].fields.free_word;
                 }
                 // aタグのid
-                a_tag_id = input_unit + "_" + input_kind + "_link_" + id;
+                a_tag_id = input_unit + "_" + input_kind + "_link";
                 $('.modal_link').attr('id', a_tag_id);
                 $('.modal-textarea').val(textarea_text);
             })
@@ -108,7 +106,6 @@
             var date = $('#datetimepicker').val();
             var input_unit = $(this).attr("id").split("_")[0];
             var input_kind = $(this).attr("id").split("_")[1];
-            var id = $(this).attr("id").split("_")[3];
             var url = $(this).prop("href");
             var token = '{{csrf_token}}';
             $.ajax({
@@ -116,7 +113,6 @@
                 method: "POST",
                 headers: { "X-CSRFToken": token },
                 data: {
-                    "id": id,
                     "input_unit": input_unit,
                     "input_kind": input_kind,
                     "free_word": free_word,
@@ -129,13 +125,7 @@
                 swal({
                     title: msg,
                     icon: "success",
-                    text: " ", // ダイアログのサイズ調整のためtext設定
-                    buttons: false,
                 });
-                // TODO 登録完了メッセージをヘッダに出す
-                // TODO 一旦リロードするが、他項目など登録していないと消えてしまうため、
-                // 最終的にはajaxでid受け取って上書きするようにする。
-                location.reload();
             })
             .always(function(){
                 removeLoading();
@@ -300,7 +290,7 @@
         </p>
         <div class="form-group objective-review-group">
             <label class="bold">今日の目標 
-                <a id="D_O_link_{{ dateFreeObjective.id|default_if_none:'' }}" href="{% url 'objectives:ajax_freeword_register' %}" class="fw_post">
+                <a id="D_O_link" href="{% url 'objectives:ajax_freeword_register' %}" class="fw_post">
                     <i class="fas fa-upload"></i>
                 </a>
             </label>
@@ -310,7 +300,7 @@
         </div>
         <div class="form-group objective-review-group">
             <label class="bold">今日の振返り 
-                <a id="D_R_link_{{ dateFreeReview.id|default_if_none:'' }}" href="{% url 'objectives:ajax_freeword_register' %}" class="fw_post">
+                <a id="D_R_link" href="{% url 'objectives:ajax_freeword_register' %}" class="fw_post">
                     <i class="fas fa-upload"></i>
                 </a>
             </label>

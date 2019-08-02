@@ -240,7 +240,6 @@ def ajax_freeword_register(request):
     '''
     print("*****[#ajax_freeword_register]start*****")
     free_word = request.POST['free_word']
-    id = request.POST['id']
     year, month, date_index, week_tuple = get_date(request.POST['input_date'])
     # 日番号：年・月・週・日
     day_index_dic = {'Y':year,'M':month,'W':week_tuple[1],'D':date_index}
@@ -252,33 +251,30 @@ def ajax_freeword_register(request):
     msg_str_unit = {'Y':'年','M':'月','W':'週','D':'日'}
     msg_str_kind = {'O':'目標','R':'振返り'}
     msg=msg_str_unit[input_unit]+'の'+msg_str_kind[input_kind]+'を'
-    if (id):
-        freeInput = FreeInput.objects.get(id=id)
-        freeInput.free_word = free_word
-        freeInput.save()
-        msg+="更新しました！"
-    else:
-        # 二重登録防止
-        frIpt = FreeInput.objects.filter(
+
+    freeInput = FreeInput.objects.filter(
+        input_unit = input_unit,
+        input_kind = input_kind,
+        year = register_year,
+        day_index = day_index_dic[input_unit],
+        user = request.user,
+    ).first()
+    if freeInput is None:
+        freeInput = FreeInput(
             input_unit = input_unit,
             input_kind = input_kind,
             year = register_year,
             day_index = day_index_dic[input_unit],
+            free_word = free_word,
+            input_status = 1,
             user = request.user,
-        ).first()
-        if frIpt is None:
-            freeInput = FreeInput(
-                input_unit = input_unit,
-                input_kind = input_kind,
-                year = register_year,
-                day_index = day_index_dic[input_unit],
-                free_word = free_word,
-                input_status = 1,
-                user = request.user,
-            )
-            freeInput.save()
-        # 中途半端なメッセージが送信されないよう、メッセージは作成
+        )
         msg+="登録しました！"
+    else:
+        freeInput.free_word = free_word
+        msg+="更新しました！"
+    freeInput.save()
+
     # TODO エラーハンドリング
     return HttpResponse(msg)
 
