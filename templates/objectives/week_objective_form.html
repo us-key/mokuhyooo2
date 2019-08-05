@@ -62,7 +62,7 @@
                         text: " ", // ダイアログのサイズ調整のためtext設定
                         buttons: false,
                     });
-                    window.location.href = "{% url 'objectives:index' %}";
+                    window.location.href = "/objectives/display_date?target_date=" + target_date;
                 })
                 .always(function(){
                     removeLoading();
