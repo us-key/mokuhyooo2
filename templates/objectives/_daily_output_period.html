@@ -10,7 +10,7 @@
 </td>
 <!-- 合計or平均 / パーセンテージ -->
 <!-- 割り算は組み込みフィルター -->
-<td>
+<td class="sumval">
     {% if numObj.summary_kind == 'S' %}
     {{ numObj.sumval|default_if_none:0|num_to_time }}
     /

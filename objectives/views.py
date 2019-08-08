@@ -104,103 +104,9 @@ def get_date_data(request, display_date):
     '''
     # 返却する値の初期化
     year, month, date_index, week_tuple = get_date(display_date)
-    '''数量目標
-    名称(マスタ)、集計種別(マスタ)、数値種別(マスタ)、
-    目標値(数値目標)、実績集計値(実績：集計)、実績値(実績)、件数(実績：平均算出用)
-    ⇒マスタと数値目標(年・週番号指定)を結合し、実績集計と当日の実績を
-    　外部結合する
-    '''
-    numberObjective = NumberObjective.objects.raw(
-        '''
-        select oo.id, m.id masterid, m.name, m.number_kind, m.summary_kind, o.objective_value, oo_sum.sumval, oo.output_value, oo_sum.cnt, o.achieve_flg, o.exceed_flg
-        from objectives_numberobjectivemaster m
-        left join objectives_numberobjective o
-        on m.id = o.master_id
-        and m.user_id = %s
-        left outer join 
-        (
-            select master_id, iso_year, week_index, sum(output_value) sumval, count(*) cnt
-            from objectives_numberobjectiveoutput
-            group by master_id, iso_year, week_index
-        ) oo_sum
-        on o.master_id = oo_sum.master_id
-        and o.iso_year = oo_sum.iso_year
-        and o.week_index = oo_sum.week_index
-
-        left outer join objectives_numberobjectiveoutput oo
-        on o.master_id = oo.master_id
-        and o.iso_year = oo.iso_year
-        and o.week_index = oo.week_index
-        and oo.date_index = %s
-
-        where o.iso_year = %s
-        and o.week_index = %s
-        order by m.order_index
-        ''' % (request.user.id, date_index, week_tuple[0], week_tuple[1])
-    )
-    # 目標達成した項目名と目標値を詰める辞書
-    achieve_item = {}
-    # 前週の実績を超えた項目名と前週の実績を詰める辞書
-    exceed_item = {}
-    for obj in numberObjective:
-        if obj.summary_kind == "S":
-            # 集計種別が「合計」で目標達成かつ目標達成フラグが"0"の場合
-            # 返却する辞書に対象と達成した目標値、連続達成回数をセットする
-            if obj.achieve_flg == "0" and obj.sumval is not None and obj.sumval >= obj.objective_value:
-                num_obj = NumberObjective.objects.filter(
-                    master__id=obj.masterid,
-                    iso_year=week_tuple[0],
-                    week_index=week_tuple[1],
-                ).first()
-                num_obj.achieve_flg = "1"
-
-                # 前週のレコード取得:前週も達成していた場合、連続達成のカウント
-                prev_wk_isoyear, prev_wk_idx = get_prev_iso(week_tuple)
-                prev_num_obj = NumberObjective.objects.filter(
-                    master__id=obj.masterid,
-                    iso_year=prev_wk_isoyear,
-                    week_index=prev_wk_idx,
-                ).first()
-
-                if prev_num_obj is None:
-                    num_obj.consecutive_count = 1
-                else:
-                    num_obj.consecutive_count = prev_num_obj.consecutive_count + 1
-
-                num_obj.save()
-                achieve_item[obj.name] = str(obj.objective_value) + "_" + obj.number_kind + "_" + str(num_obj.consecutive_count) 
-            # 集計種別が「合計」で実績アップかつ実績アップフラグが"0"の場合
-            # 返却する辞書に対象と前週の実績値、連続達成回数をセットする
-            if obj.exceed_flg == "0" and obj.sumval is not None:
-                # 前週の実績集計
-                prev_wk_isoyear, prev_wk_idx = get_prev_iso(week_tuple)
-                prev_num_obj_out = NumberObjectiveOutput.objects.filter(
-                    master__id=obj.masterid,
-                    iso_year=prev_wk_isoyear,
-                    week_index=prev_wk_idx,
-                ).values("master__id").annotate(sumval=Sum("output_value")).first()
-                if prev_num_obj_out:
-                    prev_sumval = prev_num_obj_out["sumval"]
-                    if prev_sumval and prev_sumval < obj.sumval:
-                        num_obj = NumberObjective.objects.filter(
-                            master__id=obj.masterid,
-                            iso_year=week_tuple[0],
-                            week_index=week_tuple[1],
-                        ).first()
-                        num_obj.exceed_flg = "1"
-                        # 前週のレコード取得:前週も実績アップしていた場合、連続達成のカウント
-                        prev_wk_isoyear, prev_wk_idx = get_prev_iso(week_tuple)
-                        prev_num_obj = NumberObjective.objects.filter(
-                            master__id=obj.masterid,
-                            iso_year=prev_wk_isoyear,
-                            week_index=prev_wk_idx,
-                        ).first()
-                        if prev_num_obj is None:
-                            num_obj.exceed_consecutive_count = 1
-                        else:
-                            num_obj.exceed_consecutive_count = prev_num_obj.exceed_consecutive_count + 1
-                        num_obj.save()
-                        exceed_item[obj.name] = str(prev_sumval) + "_" + obj.number_kind + "_" + str(num_obj.exceed_consecutive_count)
+    
+    # 数値目標取得
+    numberObjective, achieve_item, exceed_item = getNumObj(request.user, date_index, week_tuple)
 
     # 自由入力の取得
     dateFreeObjective = get_free_input_date(year, date_index, "O", request.user).first()
@@ -383,6 +289,8 @@ def ajax_dateoutput_create(request):
     print("*****[#ajax_dateoutput_create]start*****")
     data = json.loads(request.body)
     print(data)
+    # 返却するリスト
+    num_obj_list = []
     target_date = data["target_date"]
     if (target_date != ''):
         year, month, date_index, week_tuple = get_date(target_date)
@@ -401,19 +309,21 @@ def ajax_dateoutput_create(request):
             flg = False            
             for obj in outputs:
                 # 週目標あり＆入力値あり
-                if no.master.id == int(obj["master_id"]):
-                    # TODO 登録と更新の場合分け
-                    if obj["id"] != "":
-                        # 更新
-                        numberObjectiveOutput = NumberObjectiveOutput.objects.get(id=int(obj["id"]))
-                        numberObjectiveOutput.output_value = int(obj["value"])
-                        numberObjectiveOutput.save()
-                    else:
-                        master = NumberObjectiveMaster.objects.get(id=no.master.id)
+                if not flg and no.master.id == int(obj["master_id"]):
+                    master = NumberObjectiveMaster.objects.get(id=no.master.id)
+                    if master:
+                        numberObjectiveOutput = NumberObjectiveOutput.objects.filter(
+                            master = master,
+                            year = year,
+                            month = month,
+                            iso_year = week_tuple[0],
+                            week_index = week_tuple[1],
+                            date_index = date_index,
+                            day_of_week = week_tuple[2],
+                        ).first()
                         # 登録
-                        if master:
-                            # 二重登録防止
-                            numObjOut = NumberObjectiveOutput.objects.filter(
+                        if numberObjectiveOutput is None:
+                            numberObjectiveOutput = NumberObjectiveOutput(
                                 master = master,
                                 year = year,
                                 month = month,
@@ -421,19 +331,12 @@ def ajax_dateoutput_create(request):
                                 week_index = week_tuple[1],
                                 date_index = date_index,
                                 day_of_week = week_tuple[2],
-                            ).first()
-                            if numObjOut is None:
-                                numberObjectiveOutput = NumberObjectiveOutput(
-                                    master = master,
-                                    year = year,
-                                    month = month,
-                                    iso_year = week_tuple[0],
-                                    week_index = week_tuple[1],
-                                    date_index = date_index,
-                                    day_of_week = week_tuple[2],
-                                    output_value = int(obj["value"]),
-                                )
-                                numberObjectiveOutput.save()
+                                output_value = int(obj["value"]),
+                            )
+                        # 更新
+                        else:
+                            numberObjectiveOutput.output_value = int(obj["value"])
+                        numberObjectiveOutput.save()
                     # フラグを立てる
                     flg = True
             if not flg:
@@ -448,7 +351,38 @@ def ajax_dateoutput_create(request):
                 ).first()
                 if numObjOut:
                     numObjOut.delete()
-    return JsonResponse({"target_date":target_date})
+        # 登録後の実績集計値、連続達成、前週超えの取得
+        numberObjective, achieve_item, exceed_item = getNumObj(request.user, date_index, week_tuple)
+        
+        for n in numberObjective:
+            # TODO templatetagを呼ぶ方法ないものか
+            sum_val = ""
+            if n.summary_kind == "S":
+                tmp_val = n.sumval if n.sumval is not None else 0
+            else:
+                tmp_val = (n.sumval // n.cnt) if n.sumval is not None and n.cnt is not None else 0
+            
+            percentage = str(tmp_val*100 // n.objective_value) if n.objective_value is not None else 0
+            
+            if n.number_kind == "N":
+                sum_val = str(tmp_val)
+            else:
+                sum_val = str(tmp_val // 60) + ":" + ("00" + str(tmp_val % 60))[-2:]
+            
+            disp_str = sum_val + " / " + percentage + " %"
+            num_obj_list.append({
+                "masterid": n.masterid,
+                "disp_str": disp_str,
+            })
+    else:
+        # TODO エラーハンドリング
+        pass
+    return JsonResponse({
+            "num_obj_list": num_obj_list,
+            "achieve_item": achieve_item,
+            "exceed_item": exceed_item,
+            "target_date": target_date
+        })
 
 @login_required
 def ajax_numobjmst_order_update(request):
@@ -998,3 +932,105 @@ def get_prev_iso(week_tuple):
         prev_wk_isoyear = pWWeek_tuple[0]
         prev_wk_idx = pWWeek_tuple[1]
     return prev_wk_isoyear, prev_wk_idx
+
+def getNumObj(user, date_index, week_tuple):
+    # TODO 数値目標取得を外出しし、それだけをajaxで呼べるようにする
+    '''数量目標
+    名称(マスタ)、集計種別(マスタ)、数値種別(マスタ)、
+    目標値(数値目標)、実績集計値(実績：集計)、実績値(実績)、件数(実績：平均算出用)
+    ⇒マスタと数値目標(年・週番号指定)を結合し、実績集計と当日の実績を
+    　外部結合する
+    '''
+    numberObjective = NumberObjective.objects.raw(
+        '''
+        select oo.id, m.id masterid, m.name, m.number_kind, m.summary_kind, o.objective_value, oo_sum.sumval, oo.output_value, oo_sum.cnt, o.achieve_flg, o.exceed_flg
+        from objectives_numberobjectivemaster m
+        left join objectives_numberobjective o
+        on m.id = o.master_id
+        and m.user_id = %s
+        left outer join 
+        (
+            select master_id, iso_year, week_index, sum(output_value) sumval, count(*) cnt
+            from objectives_numberobjectiveoutput
+            group by master_id, iso_year, week_index
+        ) oo_sum
+        on o.master_id = oo_sum.master_id
+        and o.iso_year = oo_sum.iso_year
+        and o.week_index = oo_sum.week_index
+
+        left outer join objectives_numberobjectiveoutput oo
+        on o.master_id = oo.master_id
+        and o.iso_year = oo.iso_year
+        and o.week_index = oo.week_index
+        and oo.date_index = %s
+
+        where o.iso_year = %s
+        and o.week_index = %s
+        order by m.order_index
+        ''' % (user.id, date_index, week_tuple[0], week_tuple[1])
+    )
+    # 目標達成した項目名と目標値を詰める辞書
+    achieve_item = {}
+    # 前週の実績を超えた項目名と前週の実績を詰める辞書
+    exceed_item = {}
+    for obj in numberObjective:
+        if obj.summary_kind == "S":
+            # 集計種別が「合計」で目標達成かつ目標達成フラグが"0"の場合
+            # 返却する辞書に対象と達成した目標値、連続達成回数をセットする
+            if obj.achieve_flg == "0" and obj.sumval is not None and obj.sumval >= obj.objective_value:
+                num_obj = NumberObjective.objects.filter(
+                    master__id=obj.masterid,
+                    iso_year=week_tuple[0],
+                    week_index=week_tuple[1],
+                ).first()
+                num_obj.achieve_flg = "1"
+
+                # 前週のレコード取得:前週も達成していた場合、連続達成のカウント
+                prev_wk_isoyear, prev_wk_idx = get_prev_iso(week_tuple)
+                prev_num_obj = NumberObjective.objects.filter(
+                    master__id=obj.masterid,
+                    iso_year=prev_wk_isoyear,
+                    week_index=prev_wk_idx,
+                ).first()
+
+                if prev_num_obj is None:
+                    num_obj.consecutive_count = 1
+                else:
+                    num_obj.consecutive_count = prev_num_obj.consecutive_count + 1
+
+                num_obj.save()
+                achieve_item[obj.name] = str(obj.objective_value) + "_" + obj.number_kind + "_" + str(num_obj.consecutive_count) 
+            # 集計種別が「合計」で実績アップかつ実績アップフラグが"0"の場合
+            # 返却する辞書に対象と前週の実績値、連続達成回数をセットする
+            if obj.exceed_flg == "0" and obj.sumval is not None:
+                # 前週の実績集計
+                prev_wk_isoyear, prev_wk_idx = get_prev_iso(week_tuple)
+                prev_num_obj_out = NumberObjectiveOutput.objects.filter(
+                    master__id=obj.masterid,
+                    iso_year=prev_wk_isoyear,
+                    week_index=prev_wk_idx,
+                ).values("master__id").annotate(sumval=Sum("output_value")).first()
+                if prev_num_obj_out:
+                    prev_sumval = prev_num_obj_out["sumval"]
+                    if prev_sumval and prev_sumval < obj.sumval:
+                        num_obj = NumberObjective.objects.filter(
+                            master__id=obj.masterid,
+                            iso_year=week_tuple[0],
+                            week_index=week_tuple[1],
+                        ).first()
+                        num_obj.exceed_flg = "1"
+                        # 前週のレコード取得:前週も実績アップしていた場合、連続達成のカウント
+                        prev_wk_isoyear, prev_wk_idx = get_prev_iso(week_tuple)
+                        prev_num_obj = NumberObjective.objects.filter(
+                            master__id=obj.masterid,
+                            iso_year=prev_wk_isoyear,
+                            week_index=prev_wk_idx,
+                        ).first()
+                        if prev_num_obj is None:
+                            num_obj.exceed_consecutive_count = 1
+                        else:
+                            num_obj.exceed_consecutive_count = prev_num_obj.exceed_consecutive_count + 1
+                        num_obj.save()
+                        exceed_item[obj.name] = str(prev_sumval) + "_" + obj.number_kind + "_" + str(num_obj.exceed_consecutive_count)
+    return numberObjective, achieve_item, exceed_item
+    # TODO 外だしここまで

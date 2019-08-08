@@ -6,46 +6,7 @@
     $(function () {
         $("#block-content").removeClass("pad-top-56");
         $("#block-content").addClass("pad-top-96");
-        var text = "";
-        {% for k,v in achieve_item.items %}
-            var v_arr = "{{v}}".split("_");
-            var val = v_arr[0];
-            if (v_arr[1] != "N") {
-                val = Math.floor(v_arr[0] / 60) + ":" + ("00" + (v_arr[0] % 60)).slice(-2);
-            }
-            var cons_msg = "";
-            if (v_arr[2] > 1) {
-                cons_msg = v_arr[2] + "週連続達成！";
-            }
-            text += ("{{k}}" + " : " + val + " " + cons_msg + "\n");
-        {% endfor %}
-        if (text != "") {
-            swal({
-                title: "今週の目標を達成しました！",
-                text: text,
-                icon: "success",
-            });
-        }
-        var ex_text = "";
-        {% for k,v in exceed_item.items %}
-            var ex_v_arr = "{{v}}".split("_");
-            var ex_val = ex_v_arr[0];
-            if (ex_v_arr[1] != "N") {
-                ex_val = Math.floor(ex_v_arr[0] / 60) + ":" + ("00" + (ex_v_arr[0] % 60)).slice(-2);
-            }
-            var ex_cons_msg = "";
-            if (ex_v_arr[2] > 1) {
-                ex_cons_msg = ex_v_arr[2] + "週連続アップ！";
-            }
-            ex_text += ("{{k}}" + " : " + "前週の実績 : " + ex_val + " " + ex_cons_msg + "\n");
-        {% endfor %}
-        if (ex_text != "") {
-            swal({
-                title: "前週より実績がアップしました！",
-                text: ex_text,
-                icon: "success",
-            });
-        }
+
         $('#datetimepicker').datetimepicker({
             locale: moment.locale('ja', {
                 week: { dow: 1 }
@@ -180,16 +141,74 @@
                     }),
                     timeout: 10000,
                 })
-                .done(function(){
+                .done(function(data){
+                    // TODO 登録処理完了後に表示内容を取得しに行く？
+                    rows.each(function(idx, row){
+                        // master_id あんまきれいな取り方ではないがとりあえず
+                        var master_id = $(row).attr("class").split("d_row_")[1];
+                        data["num_obj_list"].forEach(function(num_obj){
+                            if (master_id == num_obj["masterid"]) {
+                                // 実績集計値
+                                var dom = $(row).find(".sumval");
+                                dom.text(num_obj["disp_str"]);
+                            }
+                        })
+                    })
                     swal({
                         title: "実績登録完了！",
-                        icon: "success",
-                        text: " ", // ダイアログのサイズ調整のためtext設定
-                        buttons: false,
+                        icon: "success"
+                    }).then(() => {
+                        // 連続達成、前週超えの判定
+                        var text = "";
+                        var achieve_items = data["achieve_item"];
+                        Object.keys(achieve_items).forEach(function(k){
+                            var v_arr = achieve_items[k].split("_");
+                            var val = v_arr[0];
+                            if (v_arr[1] != "N") {
+                                val = Math.floor(v_arr[0] / 60) + ":" + ("00" + (v_arr[0] % 60)).slice(-2);
+                            }
+                            var cons_msg = "";
+                            if (v_arr[2] > 1) {
+                                cons_msg = v_arr[2] + "週連続達成！";
+                            }
+                            text += (k + " : " + val + " " + cons_msg + "\n");
+                        });
+                        var ex_text = "";
+                        var exceed_items = data["exceed_item"];
+                        Object.keys(exceed_items).forEach(function(k){
+                            var ex_v_arr = exceed_items[k].split("_");
+                            var ex_val = ex_v_arr[0];
+                            if (ex_v_arr[1] != "N") {
+                                ex_val = Math.floor(ex_v_arr[0] / 60) + ":" + ("00" + (ex_v_arr[0] % 60)).slice(-2);
+                            }
+                            var ex_cons_msg = "";
+                            if (ex_v_arr[2] > 1) {
+                                ex_cons_msg = ex_v_arr[2] + "週連続アップ！";
+                            }
+                            ex_text += (k + " : " + "前週の実績 : " + ex_val + " " + ex_cons_msg + "\n");
+                        });
+                        if (text != "") {
+                            swal({
+                                title: "今週の目標を達成しました！",
+                                text: text,
+                                icon: "success",
+                            }).then(() => {
+                                if (ex_text != "") {
+                                    swal({
+                                        title: "前週より実績がアップしました！",
+                                        text: ex_text,
+                                        icon: "success",
+                                    });
+                                }
+                            });
+                        } else if (ex_text != "") {
+                            swal({
+                                title: "前週より実績がアップしました！",
+                                text: ex_text,
+                                icon: "success",
+                            });
+                        }
                     });
-                    location.reload();
-                    // TODO 一旦リロードするが、他項目など登録していないと消えてしまうため、
-                    // 最終的にはajaxでid受け取って上書きするようにする。
                 })
                 .always(function(){
                     removeLoading();
