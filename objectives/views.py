@@ -58,7 +58,7 @@ class NumberObjectiveMasterUpdateView(LoginRequiredMixin, UpdateView):
 def display_index(request):
     today = date.today().strftime("%Y-%m-%d")
     # 今日日付でデータ取得
-    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item, exceed_item = get_date_data(request, today)
+    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList = get_date_data(request, today)
 
     return render(request, 'objectives/index.html', {
         'display_date': today,
@@ -67,8 +67,6 @@ def display_index(request):
         'weekFreeObjective': weekFreeObjective,
         'numberObjective': numberObjective,
         'objRevFlgList': objRevFlgList,
-        'achieve_item': achieve_item,
-        'exceed_item': exceed_item,
         })
 
 @login_required
@@ -79,7 +77,7 @@ def display_date_data(request):
 
 def display_date_data_from_view(request, target_date):
     '''templateからではなくviewでtarget_date指定してindex表示する'''
-    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item, exceed_item = get_date_data(request, target_date)
+    dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList = get_date_data(request, target_date)
     return render(request, 'objectives/index.html', {
         'display_date': target_date,
         'dateFreeObjective': dateFreeObjective,
@@ -87,8 +85,6 @@ def display_date_data_from_view(request, target_date):
         'weekFreeObjective': weekFreeObjective,
         'numberObjective': numberObjective,
         'objRevFlgList': objRevFlgList,
-        'achieve_item': achieve_item,
-        'exceed_item': exceed_item,
         })
 
 @login_required
@@ -105,7 +101,7 @@ def get_date_data(request, display_date):
     # 返却する値の初期化
     year, month, date_index, week_tuple = get_date(display_date)
     
-    # 数値目標取得
+    # 数値目標取得：achieve_item,exceed_itemは使わない
     numberObjective, achieve_item, exceed_item = getNumObj(request.user, date_index, week_tuple)
 
     # 自由入力の取得
@@ -138,7 +134,7 @@ def get_date_data(request, display_date):
         'PDR': '0' if (get_free_input_date(pDYear, pDDate_index, "O", request.user)
                 and not get_free_input_date(pDYear, pDDate_index, "R", request.user)) else '1',
     }
-    return dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList, achieve_item, exceed_item
+    return dateFreeObjective, dateFreeReview, weekFreeObjective, numberObjective, objRevFlgList
 
 @login_required
 def ajax_freeword_register(request):
@@ -934,7 +930,6 @@ def get_prev_iso(week_tuple):
     return prev_wk_isoyear, prev_wk_idx
 
 def getNumObj(user, date_index, week_tuple):
-    # TODO 数値目標取得を外出しし、それだけをajaxで呼べるようにする
     '''数量目標
     名称(マスタ)、集計種別(マスタ)、数値種別(マスタ)、
     目標値(数値目標)、実績集計値(実績：集計)、実績値(実績)、件数(実績：平均算出用)
@@ -1033,4 +1028,3 @@ def getNumObj(user, date_index, week_tuple):
                         num_obj.save()
                         exceed_item[obj.name] = str(prev_sumval) + "_" + obj.number_kind + "_" + str(num_obj.exceed_consecutive_count)
     return numberObjective, achieve_item, exceed_item
-    # TODO 外だしここまで
