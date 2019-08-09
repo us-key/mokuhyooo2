@@ -1004,7 +1004,7 @@ def getNumObj(user, date_index, week_tuple):
                     master__id=obj.masterid,
                     iso_year=prev_wk_isoyear,
                     week_index=prev_wk_idx,
-                ).values("master__id").annotate(sumval=Sum("output_value")).first()
+                ).aggregate(sumval=Sum("output_value"))
                 if prev_num_obj_out:
                     prev_sumval = prev_num_obj_out["sumval"]
                     if prev_sumval and prev_sumval < obj.sumval:
