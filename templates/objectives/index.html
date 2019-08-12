@@ -22,42 +22,6 @@
                 window.location.href = "/objectives/display_date?target_date=" + target_date;    
             }
         });
-        $('.modalOpener').on("click", function(e){
-            e.preventDefault();
-            // 処理前に Loading 画像を表示
-            dispLoading("処理中...");
-
-            // freeInput取得
-            var input_unit = $(this).attr("id").split("_")[0];
-            var input_kind = $(this).attr("id").split("_")[1];
-            var date = $('#datetimepicker').val();
-            var url = '/objectives/ajax/freeword/get';
-            $.ajax({
-                url: url,
-                method: "GET",
-                data: {
-                    "input_unit": input_unit,
-                    "input_kind": input_kind,
-                    "input_date": date,
-                    "user": {{user.id}}
-                },
-                timeout: 10000,
-                datatype: "text",
-            })
-            .done(function(json){
-                textarea_text = "";
-                if (json.length>0) {
-                    textarea_text = json[0].fields.free_word;
-                }
-                // aタグのid
-                a_tag_id = input_unit + "_" + input_kind + "_link";
-                $('.modal_link').attr('id', a_tag_id);
-                $('.modal-textarea').val(textarea_text);
-            })
-            .always(function(){
-                removeLoading();
-            });
-        })
         $(".fw_post").on("click", function(e){
             e.preventDefault();
             // 処理前に Loading 画像を表示
@@ -367,24 +331,5 @@
 {% else %}
 <p>週の目標が設定されていません！</p><a href="{% url 'objectives:week_objective_create' display_date %}">設定する</a>
 {% endif %}
-<!-- modal -->
-<div class="modal fade" id="freecommentmodal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="form-group objective-review-group">
-                    <!-- 選択したリンクによりjsで構成 -->
-                    <label class="modal-label"><!-- ラベル：可変設定 -->
-                        <a href="{% url 'objectives:ajax_freeword_register' %}" class="fw_post modal_link">
-                            <!-- aタグのid可変設定 -->
-                            <i class="fas fa-upload"></i>
-                        </a>
-                    </label>
-                    <textarea class='form-control objective-review-input modal-textarea' rows='6'></textarea>
-                    <!-- テキストエリアの中身可変設定 -->
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 {% endblock %}
