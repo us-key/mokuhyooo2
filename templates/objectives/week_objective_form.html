@@ -7,7 +7,7 @@
             e.preventDefault();
             var path = location.pathname;
             var target_date = path.split("/")[4];
-            var free_word = $(".objective-review-input").val();
+            var free_word = $(".objective-review-input").val().trim();
             var objectives = [];
             var rows = $(".wk_obj_row");
             rows.each(function(idx, row){

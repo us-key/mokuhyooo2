@@ -16,7 +16,7 @@
             var input_unit = key.substring(1,2);
             var input_kind = key.substring(2,3);
             var id = input_kind == "R" ? "{{ free_input_rev.id }}" : "{{ free_input.obj.id }}";
-            var free_word = input_kind == "R" ? $(".rev").val() : $(".obj").val();
+            var free_word = input_kind == "R" ? $(".rev").val().trim() : $(".obj").val().trim();
             if (free_word == "") {
                 $("#invalid-fb").text("入力してください。");
             }

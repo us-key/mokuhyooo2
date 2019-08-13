@@ -24,37 +24,46 @@
         });
         $(".fw_post").on("click", function(e){
             e.preventDefault();
-            // 処理前に Loading 画像を表示
-            dispLoading("処理中...");
 
-            var free_word = $(this).parents(".objective-review-group").children(".objective-review-input").val();
-            var date = $('#datetimepicker').val();
-            var input_unit = $(this).attr("id").split("_")[0];
-            var input_kind = $(this).attr("id").split("_")[1];
-            var url = $(this).prop("href");
-            var token = '{{csrf_token}}';
-            $.ajax({
-                url: url,
-                method: "POST",
-                headers: { "X-CSRFToken": token },
-                data: {
-                    "input_unit": input_unit,
-                    "input_kind": input_kind,
-                    "free_word": free_word,
-                    "input_date": date 
-                },
-                timeout: 10000,
-                datatype: "text",
-            })
-            .done(function(msg){
-                swal({
-                    title: msg,
-                    icon: "success",
+            var free_word = $(this).parents(".objective-review-group").children(".objective-review-input").val().trim();
+            var msg_dom = $(this).parents(".objective-review-group").children(".msg-area");
+            if (free_word == "") {
+                $(msg_dom).text("入力してください");
+            } else {
+                $(msg_dom).text("");
+
+                // 処理前に Loading 画像を表示
+                dispLoading("処理中...");
+
+                var date = $('#datetimepicker').val();
+                var input_unit = $(this).attr("id").split("_")[0];
+                var input_kind = $(this).attr("id").split("_")[1];
+                var url = $(this).prop("href");
+                var token = '{{csrf_token}}';
+                $.ajax({
+                    url: url,
+                    method: "POST",
+                    headers: { "X-CSRFToken": token },
+                    data: {
+                        "input_unit": input_unit,
+                        "input_kind": input_kind,
+                        "free_word": free_word,
+                        "input_date": date 
+                    },
+                    timeout: 10000,
+                    datatype: "text",
+                })
+                .done(function(msg){
+                    swal({
+                        title: msg,
+                        icon: "success",
+                    });
+                })
+                .always(function(){
+                    removeLoading();
                 });
-            })
-            .always(function(){
-                removeLoading();
-            });
+
+            }
         });
         // 日の実績値を投げる
         $(".do_post").on("click", function(e){
@@ -88,9 +97,11 @@
                     outputs.push(obj); 
                 }
             });
+            var msg_dom = $(this).parents(".num-obj-table").children(".msg-area");
             if (outputs.length == 0){
-                $(".msg-area").text("実績の入力がありません。");
+                $(msg_dom).text("実績の入力がありません。");
             } else {
+                $(msg_dom).text("");
                 // 処理前に Loading 画像を表示
                 dispLoading("処理中...");
                 var token = '{{csrf_token}}';
@@ -277,6 +288,7 @@
                     <i class="fas fa-upload"></i>
                 </a>
             </label>
+            <i class="msg-area"></i>
             <textarea class='form-control objective-review-input' 
                       rows='2' data-toggle="tooltip"
                       title="{{ dateFreeObjective.free_word|default_if_none:'' }}">{{ dateFreeObjective.free_word|default_if_none:"" }}</textarea>
@@ -287,12 +299,13 @@
                     <i class="fas fa-upload"></i>
                 </a>
             </label>
+            <i class="msg-area"></i>
             <textarea class='form-control objective-review-input'
                       rows='2' data-toggle="tooltip"
                       title="{{ dateFreeReview.free_word|default_if_none:'' }}">{{ dateFreeReview.free_word|default_if_none:"" }}</textarea>
         </div>    
     </div>
-    <div class="col-md-6 col-12">
+    <div class="col-md-6 col-12 num-obj-table">
         <div class="msg-area"></div>
         <div class="table-responsive">
             <table class="table table-hover text-nowrap">
