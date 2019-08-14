@@ -21,7 +21,7 @@
             {% endif %}    
             <!-- 週振り返り以外では件数表示 -->
             {% if input_unit != "W" %}
-                ({{ sum_dic.cnt }})
+                ({{ sum_dic.cnt|default_if_none:0 }})
             {% endif %}
         {% endif %}
     {% endfor %}
