@@ -61,6 +61,7 @@
             var labelsDOM = $(".obj_rev_head").children("th");
             var labels = [];
             var vals = [];
+            var graphType = ""
             var itemName = $(this).children("th")[0].innerText;
             {% if input_unit == "W" %}
             const head_col = 3;
@@ -73,7 +74,14 @@
                 }
             })
             $(this).children("td").each(function(idx, dom){
-                if (idx > head_col-2) {
+                if (idx == 0) {
+                    if (dom.innerText == "合計") {
+                        graphType = "bar";
+                    } else {
+                        graphType = "line";
+                    }
+                }
+                if (idx > head_col-1) {
                     var val = dom.innerText.split(" ")[0];
                     if (val.indexOf(":") > 0) {
                         val = val.split(":");
@@ -83,7 +91,7 @@
                 }
             })
             var newChart = new Chart($(cht), {
-                type: "bar",
+                type: graphType,
                 data: {
                     // TODO 暫定
                     labels: labels,
