@@ -55,6 +55,47 @@
                 removeLoading();
             });
         });
+        $(".obj_rev_tr").on("click", function(e){
+            e.preventDefault();
+            var cht = $("#obj_rev_chart");
+            var labelsDOM = $(".obj_rev_head").children("th");
+            var labels = [];
+            var vals = [];
+            var itemName = $(this).children("th")[0].innerText;
+            {% if input_unit == "W" %}
+            const head_col = 3;
+            {% else %}
+            const head_col = 2;
+            {% endif %}
+            labelsDOM.each(function(idx, dom){
+                if (idx > head_col-1) {
+                    labels.push(dom.innerText);
+                }
+            })
+            $(this).children("td").each(function(idx, dom){
+                if (idx > head_col-2) {
+                    var val = dom.innerText.split(" ")[0];
+                    if (val.indexOf(":") > 0) {
+                        val = val.split(":");
+                        val = parseInt(val[0]) * 60 + parseInt(val[1]);
+                    }
+                    vals.push(val);
+                }
+            })
+            var newChart = new Chart($(cht), {
+                type: "bar",
+                data: {
+                    // TODO 暫定
+                    labels: labels,
+                    datasets: [{
+                        label: itemName,
+                        data: vals,
+                        backgroundColor: "rgba(255,99,132,0.2",
+                        borderWidth: 1
+                    }]
+                }
+            })
+        })
     })
 </script>
 <h4>{{ input_unit|input_unit }}の{{ input_kind|input_kind }} ({{ target_period_str }})</h4>
@@ -124,5 +165,6 @@
         </table>            
     </div>
 </div>
+<canvas id="obj_rev_chart" style="width: 100%; height:300px;"></canvas>
 {% endif %}
 {% endblock %}
