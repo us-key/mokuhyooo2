@@ -2,6 +2,8 @@
 {% block content %}
 {% load get_dic_vals %}
 <script type="text/javascript">
+    // グラフを毎回初期化するためグローバル変数化
+    var chart;
     $(function () {
         if ("{{input_kind}}" == "R") {
             // 振返りの場合、目標入力欄を読み取り専用に
@@ -90,10 +92,12 @@
                     vals.push(val);
                 }
             })
-            var newChart = new Chart($(cht), {
+            if (chart) {
+                chart.destroy();
+            }
+            chart = new Chart($(cht), {
                 type: graphType,
                 data: {
-                    // TODO 暫定
                     labels: labels,
                     datasets: [{
                         label: itemName,
@@ -101,6 +105,15 @@
                         backgroundColor: "rgba(255,99,132,0.2",
                         borderWidth: 1
                     }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
                 }
             })
         })
