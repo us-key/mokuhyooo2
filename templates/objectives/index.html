@@ -53,16 +53,23 @@
                     timeout: 10000,
                     datatype: "text",
                 })
-                .done(function(msg){
-                    swal({
-                        title: msg,
-                        icon: "success",
-                    });
-                })
-                .always(function(){
+                .then(
+                    function(msg){
+                        swal({
+                            title: msg,
+                            icon: "success",
+                        });
+                    },
+                    function(){
+                        swal({
+                            title: "登録に失敗しました",
+                            text: "時間をおいて再実行してください。",
+                            icon: "error",
+                        })
+                    },
+                ).always(function(){
                     removeLoading();
-                });
-
+                })
             }
         });
         // 日の実績値を投げる
