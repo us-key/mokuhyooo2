@@ -61,13 +61,10 @@
                         });
                     },
                     function(){
-                        swal({
-                            title: "登録に失敗しました",
-                            text: "時間をおいて再実行してください。",
-                            icon: "error",
-                        })
-                    },
-                ).always(function(){
+                        ajaxError();
+                    }
+                )
+                .always(function(){
                     removeLoading();
                 })
             }
@@ -123,75 +120,80 @@
                     }),
                     timeout: 10000,
                 })
-                .done(function(data){
-                    // TODO 登録処理完了後に表示内容を取得しに行く？
-                    rows.each(function(idx, row){
-                        // master_id あんまきれいな取り方ではないがとりあえず
-                        var master_id = $(row).attr("class").split("d_row_")[1];
-                        data["num_obj_list"].forEach(function(num_obj){
-                            if (master_id == num_obj["masterid"]) {
-                                // 実績集計値
-                                var dom = $(row).find(".sumval");
-                                dom.text(num_obj["disp_str"]);
-                            }
-                        })
-                    })
-                    swal({
-                        title: "実績登録完了！",
-                        icon: "success"
-                    }).then(() => {
-                        // 連続達成、前週超えの判定
-                        var text = "";
-                        var achieve_items = data["achieve_item"];
-                        Object.keys(achieve_items).forEach(function(k){
-                            var v_arr = achieve_items[k].split("_");
-                            var val = v_arr[0];
-                            if (v_arr[1] != "N") {
-                                val = Math.floor(v_arr[0] / 60) + ":" + ("00" + (v_arr[0] % 60)).slice(-2);
-                            }
-                            var cons_msg = "";
-                            if (v_arr[2] > 1) {
-                                cons_msg = v_arr[2] + "週連続達成！";
-                            }
-                            text += (k + " : " + val + " " + cons_msg + "\n");
-                        });
-                        var ex_text = "";
-                        var exceed_items = data["exceed_item"];
-                        Object.keys(exceed_items).forEach(function(k){
-                            var ex_v_arr = exceed_items[k].split("_");
-                            var ex_val = ex_v_arr[0];
-                            if (ex_v_arr[1] != "N") {
-                                ex_val = Math.floor(ex_v_arr[0] / 60) + ":" + ("00" + (ex_v_arr[0] % 60)).slice(-2);
-                            }
-                            var ex_cons_msg = "";
-                            if (ex_v_arr[2] > 1) {
-                                ex_cons_msg = ex_v_arr[2] + "週連続アップ！";
-                            }
-                            ex_text += (k + " : " + "前週の実績 : " + ex_val + " " + ex_cons_msg + "\n");
-                        });
-                        if (text != "") {
-                            swal({
-                                title: "今週の目標を達成しました！",
-                                text: text,
-                                icon: "success",
-                            }).then(() => {
-                                if (ex_text != "") {
-                                    swal({
-                                        title: "前週より実績がアップしました！",
-                                        text: ex_text,
-                                        icon: "success",
-                                    });
+                .then(
+                    function(data){
+                        // TODO 登録処理完了後に表示内容を取得しに行く？
+                        rows.each(function(idx, row){
+                            // master_id あんまきれいな取り方ではないがとりあえず
+                            var master_id = $(row).attr("class").split("d_row_")[1];
+                            data["num_obj_list"].forEach(function(num_obj){
+                                if (master_id == num_obj["masterid"]) {
+                                    // 実績集計値
+                                    var dom = $(row).find(".sumval");
+                                    dom.text(num_obj["disp_str"]);
                                 }
+                            })
+                        })
+                        swal({
+                            title: "実績登録完了！",
+                            icon: "success"
+                        }).then(() => {
+                            // 連続達成、前週超えの判定
+                            var text = "";
+                            var achieve_items = data["achieve_item"];
+                            Object.keys(achieve_items).forEach(function(k){
+                                var v_arr = achieve_items[k].split("_");
+                                var val = v_arr[0];
+                                if (v_arr[1] != "N") {
+                                    val = Math.floor(v_arr[0] / 60) + ":" + ("00" + (v_arr[0] % 60)).slice(-2);
+                                }
+                                var cons_msg = "";
+                                if (v_arr[2] > 1) {
+                                    cons_msg = v_arr[2] + "週連続達成！";
+                                }
+                                text += (k + " : " + val + " " + cons_msg + "\n");
                             });
-                        } else if (ex_text != "") {
-                            swal({
-                                title: "前週より実績がアップしました！",
-                                text: ex_text,
-                                icon: "success",
+                            var ex_text = "";
+                            var exceed_items = data["exceed_item"];
+                            Object.keys(exceed_items).forEach(function(k){
+                                var ex_v_arr = exceed_items[k].split("_");
+                                var ex_val = ex_v_arr[0];
+                                if (ex_v_arr[1] != "N") {
+                                    ex_val = Math.floor(ex_v_arr[0] / 60) + ":" + ("00" + (ex_v_arr[0] % 60)).slice(-2);
+                                }
+                                var ex_cons_msg = "";
+                                if (ex_v_arr[2] > 1) {
+                                    ex_cons_msg = ex_v_arr[2] + "週連続アップ！";
+                                }
+                                ex_text += (k + " : " + "前週の実績 : " + ex_val + " " + ex_cons_msg + "\n");
                             });
-                        }
-                    });
-                })
+                            if (text != "") {
+                                swal({
+                                    title: "今週の目標を達成しました！",
+                                    text: text,
+                                    icon: "success",
+                                }).then(() => {
+                                    if (ex_text != "") {
+                                        swal({
+                                            title: "前週より実績がアップしました！",
+                                            text: ex_text,
+                                            icon: "success",
+                                        });
+                                    }
+                                });
+                            } else if (ex_text != "") {
+                                swal({
+                                    title: "前週より実績がアップしました！",
+                                    text: ex_text,
+                                    icon: "success",
+                                });
+                            }
+                        });
+                    },
+                    function(){
+                        ajaxError();
+                    }
+                )
                 .always(function(){
                     removeLoading();
                 });
@@ -219,7 +221,7 @@
         if ($('#datetimepicker').val() != "" && $('#datetimepicker').val().split("-").length == 1) {
             window.location.reload();
         }
-    } 
+    }
 </script>
 <div class="row nav-date">
     <div class="col-1 btn btn-success" id="btn_left">＜</div>

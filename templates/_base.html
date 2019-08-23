@@ -88,6 +88,14 @@
         }
         return [outStr, msg];
     }
+    // ajaxリクエストエラー時の処理
+    function ajaxError() {
+        swal({
+            title: "登録に失敗しました",
+            text: "時間をおいて再実行してください。",
+            icon: "error",
+        })
+    }
     /* ------------------------------
     Loading イメージ表示関数
     引数： msg 画面に表示する文言
