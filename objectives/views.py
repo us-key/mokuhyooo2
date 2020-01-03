@@ -924,7 +924,7 @@ def get_prev_iso(week_tuple):
     if prev_wk_idx == 0:
         # 1週目だった場合、前年最終週のindex設定
         # 前週の変数取得
-        pWYear, pWMonth, pWDate_index, pWWeek_tuple = get_date(get_date_str_diff(display_date, -7))
+        pWYear, pWMonth, pWDate_index, pWWeek_tuple = get_date(get_date_str_diff(date(week_tuple[0],week_tuple[1],week_tuple[2]).isoformat(), -7))
         prev_wk_isoyear = pWWeek_tuple[0]
         prev_wk_idx = pWWeek_tuple[1]
     return prev_wk_isoyear, prev_wk_idx
